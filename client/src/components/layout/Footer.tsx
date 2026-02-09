@@ -7,12 +7,19 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <Link href="/" className="font-heading font-bold text-2xl tracking-tighter text-primary">
-              monipack
-            </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Your trusted partner for premium packaging solutions. Quality, durability, and sustainability in every box.
+            <div className="flex items-center gap-3">
+              <img 
+                src="/mni-logo.png" 
+                alt="MNI Logo"
+                className="h-12 w-auto"
+              />
+            </div>
+
+            <p className="text-sm text-muted-foreground max-w-xs mt-2">
+              MOROOJ NIZWA INTERNATIONAL LLC — Parent Company
             </p>
+
+
           </div>
           
           <div>

@@ -1,17 +1,48 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
+import { queryClient } from "./lib/queryClient";
+import { CartProvider } from "./context/CartContext";
+import { Layout } from "./components/layout/Layout";
+import { AdminLayout } from "./components/layout/AdminLayout";
+import Home from "./pages/Home";
+import ProductList from "./pages/ProductList";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import NotFound from "./pages/not-found";
+import CategoryPage from "./pages/CategoryPage";
+import AdminLogin from "./pages/admin/Login";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
+      {/* Admin Routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" nest>
+        <AdminLayout>
+          <Switch>
+            <Route path="/" component={AdminDashboard} />
+            <Route path="/products" component={AdminProducts} />
+            {/* Fallback for admin routes */}
+             <Route component={AdminDashboard} />
+          </Switch>
+        </AdminLayout>
+      </Route>
+
+      {/* Public Routes */}
+      <Route>
+        <Layout>
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/products" component={ProductList} />
+            <Route path="/products/:id" component={ProductDetail} />
+            <Route path="/category/:slug" component={CategoryPage} />
+            <Route path="/cart" component={Cart} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
+      </Route>
     </Switch>
   );
 }
@@ -19,10 +50,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
+      <CartProvider>
         <Router />
-      </TooltipProvider>
+      </CartProvider>
     </QueryClientProvider>
   );
 }

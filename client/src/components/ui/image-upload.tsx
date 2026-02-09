@@ -44,15 +44,18 @@ export function ImageUpload({
           body: formData,
         });
 
-        if (!res.ok) throw new Error("Upload failed");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Upload failed");
+        }
 
         const { urls } = await res.json();
         onChange([...value, ...urls]);
         toast({ title: "Success", description: "Images uploaded successfully" });
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Failed to upload images",
+          description: error.message || "Failed to upload images",
           variant: "destructive",
         });
       } finally {

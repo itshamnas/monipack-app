@@ -68,6 +68,10 @@ app.use((req, res, next) => {
 
     console.error("Internal Server Error:", err);
 
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: "File too large. Maximum size is 10MB." });
+    }
+
     if (res.headersSent) {
       return next(err);
     }

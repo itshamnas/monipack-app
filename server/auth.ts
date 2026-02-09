@@ -3,21 +3,14 @@ import type { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
-
-function getIp(req: Request): string | null {
-  const ip = req.ip;
-  if (!ip) return null;
-  if (Array.isArray(ip)) return ip[0] || null;
-  return ip;
-}
+import bcrypt from "bcrypt";
 
 const PgStore = connectPgSimple(session);
 
 export type AdminSession = {
-  adminId: number;
+  adminId: string;
   email: string;
   role: "SUPER_ADMIN" | "ADMIN";
-  otpVerified: boolean;
 };
 
 declare module "express-session" {
@@ -27,17 +20,36 @@ declare module "express-session" {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.admin || !req.session.admin.otpVerified) {
+  if (!req.session.admin) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   next();
 }
 
 export function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.admin || !req.session.admin.otpVerified || req.session.admin.role !== "SUPER_ADMIN") {
+  if (!req.session.admin || req.session.admin.role !== "SUPER_ADMIN") {
     return res.status(403).json({ message: "Forbidden: Super Admin access required" });
   }
   next();
+}
+
+async function ensureSuperAdmin() {
+  const email = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
+  const pin = process.env.SUPER_ADMIN_PIN || process.env.ADMIN_PIN || "123456";
+  if (!email) return;
+
+  const existing = await storage.getAdminByEmail(email);
+  if (!existing) {
+    const pinHash = await bcrypt.hash(pin, 10);
+    await storage.createAdmin({
+      email,
+      role: "SUPER_ADMIN",
+      pinHash,
+      active: true,
+      createdBy: null,
+    });
+    console.log(`[auth] Auto-provisioned SUPER_ADMIN: ${email}`);
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -56,6 +68,8 @@ export function setupAuth(app: Express) {
     })
   );
 
+  ensureSuperAdmin().catch(err => console.error("[auth] Failed to ensure super admin:", err));
+
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     const { email, pin } = req.body;
 
@@ -63,56 +77,53 @@ export function setupAuth(app: Express) {
       return res.status(400).json({ message: "Email and PIN are required" });
     }
 
-    const adminPin = process.env.ADMIN_PIN || "123456";
-    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
-    const normalizedEmail = email.toLowerCase();
-
-    if (pin !== adminPin) {
-      return res.status(403).json({ message: "Invalid email or PIN" });
+    if (typeof pin !== "string" || pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      return res.status(400).json({ message: "PIN must be exactly 6 digits" });
     }
 
-    let admin = await storage.getAdminByEmail(normalizedEmail);
+    const normalizedEmail = email.toLowerCase().trim();
 
-    if (!admin && normalizedEmail === superAdminEmail) {
-      admin = await storage.createAdmin({
-        email: normalizedEmail,
-        name: email.split("@")[0],
-        role: "SUPER_ADMIN",
-        isActive: true,
-      });
-    }
-
+    const admin = await storage.getAdminByEmail(normalizedEmail);
     if (!admin) {
       return res.status(403).json({ message: "Invalid email or PIN" });
     }
 
-    if (!admin.isActive) {
+    if (!admin.active) {
       return res.status(403).json({ message: "Account disabled. Contact a Super Admin." });
     }
+
+    const pinValid = await bcrypt.compare(pin, admin.pinHash);
+    if (!pinValid) {
+      await storage.createAuditLog({
+        actorAdminId: admin.id,
+        action: "LOGIN_FAIL",
+        metaJson: { email: normalizedEmail, reason: "invalid_pin" },
+      });
+      return res.status(403).json({ message: "Invalid email or PIN" });
+    }
+
+    await storage.updateLastLogin(admin.id);
 
     req.session.admin = {
       adminId: admin.id,
       email: admin.email,
       role: admin.role,
-      otpVerified: true,
     };
 
     await storage.createAuditLog({
-      adminId: admin.id,
+      actorAdminId: admin.id,
       action: "LOGIN_SUCCESS",
-      entity: "auth",
-      details: `Admin logged in: ${admin.email}`,
-      ipAddress: getIp(req),
+      metaJson: { email: normalizedEmail },
     });
 
     res.json({
       message: "Authenticated",
-      admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role },
+      admin: { id: admin.id, email: admin.email, role: admin.role },
     });
   });
 
   app.get("/api/auth/session", (req: Request, res: Response) => {
-    if (req.session.admin && req.session.admin.otpVerified) {
+    if (req.session.admin) {
       return res.json({ authenticated: true, admin: req.session.admin });
     }
     res.json({ authenticated: false });
@@ -121,11 +132,9 @@ export function setupAuth(app: Express) {
   app.post("/api/auth/logout", async (req: Request, res: Response) => {
     if (req.session.admin) {
       await storage.createAuditLog({
-        adminId: req.session.admin.adminId,
+        actorAdminId: req.session.admin.adminId,
         action: "LOGOUT",
-        entity: "auth",
-        details: `Admin logged out: ${req.session.admin.email}`,
-        ipAddress: getIp(req),
+        metaJson: { email: req.session.admin.email },
       });
     }
     req.session.destroy((err) => {

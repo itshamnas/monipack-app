@@ -1,0 +1,88 @@
+Change authentication and admin user management to this exact system:
+
+GOAL
+- Only one SUPER_ADMIN exists (defined by SUPER_ADMIN_EMAIL env).
+- SUPER_ADMIN can create ADMIN users.
+- Login method must be Email + 6-digit PIN only (remove Google OAuth and remove email OTP).
+- Each ADMIN has their own email + PIN created by SUPER_ADMIN.
+- Admin users must not be able to view or edit other admins, banners, or super admin tools.
+
+DATABASE
+Create/ensure these tables:
+
+admins:
+- id (uuid)
+- email (string, unique, lowercase)
+- role (enum: SUPER_ADMIN | ADMIN)
+- pin_hash (string)  // bcrypt hash of 6-digit pin
+- active (boolean default true)
+- created_by (uuid nullable) // super admin id
+- created_at
+- updated_at
+- last_login_at (nullable)
+
+audit_logs:
+- id (uuid)
+- actor_admin_id (uuid nullable)
+- action (string) // e.g. LOGIN_SUCCESS, LOGIN_FAIL, ADMIN_CREATED, PIN_RESET
+- meta_json (json)
+- created_at
+
+AUTH / SESSION
+- Implement session cookie auth (HttpOnly cookie).
+- After login success, set session cookie.
+- All /api/admin/* routes require auth.
+- Enforce role checks server-side.
+
+LOGIN FLOW (PUBLIC)
+Route: /admin/login
+Form:
+- email
+- 6-digit pin
+On submit:
+- POST /api/auth/login { email, pin }
+Rules:
+- If email == SUPER_ADMIN_EMAIL: authenticate against SUPER_ADMIN_PIN env (bcrypt hashed or plain then hash compare). This ensures only 1 super admin.
+- Else authenticate against admins table row with role ADMIN and active=true.
+- On success: create session and redirect to /admin
+- On failure: show clear error.
+
+SUPER_ADMIN: ADMIN USERS PAGE
+Route: /admin/admin-users (SUPER_ADMIN only)
+UI:
+- Table of admins (email, active, created_at, last_login_at)
+- Button: "Create Admin"
+Create Admin modal fields:
+- Email (required)
+- 6-digit PIN (required, exactly 6 digits)
+- Active toggle (default ON)
+On submit:
+- POST /api/admin/users { email, pin, active }
+Server:
+- Only SUPER_ADMIN can call this.
+- Validate email format, pin exactly 6 digits.
+- Store pin as bcrypt hash.
+- Create audit log ADMIN_CREATED.
+- Return new admin in response.
+Also add actions:
+- Reset PIN (SUPER_ADMIN only): PUT /api/admin/users/:id/pin { pin }
+- Disable/Enable: PUT /api/admin/users/:id/status { active }
+
+ADMIN PERMISSIONS
+ADMIN can access:
+- /admin/products
+- /admin/categories (admins can add categories)
+ADMIN cannot access:
+- /admin/banners
+- /admin/admin-users
+- /api/admin/users endpoints
+
+FIX THE “NOT WORKING” UI PROBLEM
+- Add proper loading + error messages for all admin actions.
+- If API returns error, show it on screen.
+- Ensure all admin fetch calls include credentials:
+  fetch(url, { credentials: "include" })
+
+DELIVERABLES
+- Remove Google OAuth and OTP logic completely.
+- Implement the new email+pin auth and super

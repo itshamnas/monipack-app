@@ -9,7 +9,7 @@ export interface Product {
   images: string[];
   isActive: boolean;
   isFeatured: boolean;
-  createdBy: number | null;
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,7 +22,7 @@ export interface Category {
   image: string | null;
   sortOrder: number;
   isActive: boolean;
-  createdBy: number | null;
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,29 +35,27 @@ export interface Banner {
   linkUrl: string | null;
   sortOrder: number;
   isActive: boolean;
-  createdBy: number | null;
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Admin {
-  id: number;
+  id: string;
   email: string;
-  name: string;
-  googleId: string | null;
   role: "SUPER_ADMIN" | "ADMIN";
-  isActive: boolean;
+  active: boolean;
+  createdBy: string | null;
   createdAt: string;
+  updatedAt: string;
+  lastLoginAt: string | null;
 }
 
 export interface AuditLog {
-  id: number;
-  adminId: number | null;
+  id: string;
+  actorAdminId: string | null;
   action: string;
-  entity: string;
-  entityId: number | null;
-  details: string | null;
-  ipAddress: string | null;
+  metaJson: any;
   createdAt: string;
 }
 
@@ -68,11 +66,9 @@ export interface CartItem {
 
 export interface AuthSession {
   authenticated: boolean;
-  pendingOtp?: boolean;
   admin?: {
-    adminId: number;
+    adminId: string;
     email: string;
     role: "SUPER_ADMIN" | "ADMIN";
-    otpVerified: boolean;
   };
 }

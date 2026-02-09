@@ -6,6 +6,7 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcrypt";
 
 function getIp(req: Request): string | null {
   const ip = req.ip;
@@ -46,7 +47,6 @@ function param(val: string | string[] | undefined): string {
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Serve uploaded images
   app.use("/uploads", (req, res, next) => {
     const filePath = path.join(uploadDir, req.path);
     if (fs.existsSync(filePath)) {
@@ -62,20 +62,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ whatsappNumber: process.env.WHATSAPP_NUMBER || "1234567890" });
   });
 
-  // Get active categories
   app.get("/api/categories", async (_req: Request, res: Response) => {
     const cats = await storage.getAllCategories(false);
     res.json(cats);
   });
 
-  // Get category by slug
   app.get("/api/categories/:slug", async (req: Request, res: Response) => {
     const cat = await storage.getCategoryBySlug(param(req.params.slug));
     if (!cat || !cat.isActive) return res.status(404).json({ message: "Category not found" });
     res.json(cat);
   });
 
-  // Get active products
   app.get("/api/products", async (req: Request, res: Response) => {
     const { search, category } = req.query;
     if (search && typeof search === "string") {
@@ -92,14 +89,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(prods);
   });
 
-  // Get product by slug
   app.get("/api/products/:slug", async (req: Request, res: Response) => {
     const product = await storage.getProductBySlug(param(req.params.slug));
     if (!product || !product.isActive) return res.status(404).json({ message: "Product not found" });
     res.json(product);
   });
 
-  // Get active banners
   app.get("/api/banners", async (_req: Request, res: Response) => {
     const b = await storage.getAllBanners(false);
     res.json(b);
@@ -107,7 +102,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ===== ADMIN API =====
 
-  // Upload images
   app.post("/api/admin/upload", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) return res.status(400).json({ message: "No files uploaded" });
@@ -151,12 +145,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "CREATE",
-      entity: "category",
-      entityId: cat.id,
-      details: `Created category: ${cat.name}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "CATEGORY_CREATED",
+      metaJson: { categoryId: cat.id, name: cat.name },
     });
 
     res.status(201).json(cat);
@@ -182,12 +173,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const updated = await storage.updateCategory(id, parsed.data);
 
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "UPDATE",
-      entity: "category",
-      entityId: id,
-      details: `Updated category: ${updated?.name}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "CATEGORY_UPDATED",
+      metaJson: { categoryId: id, name: updated?.name },
     });
 
     res.json(updated);
@@ -240,12 +228,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "CREATE",
-      entity: "product",
-      entityId: product.id,
-      details: `Created product: ${product.name}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "PRODUCT_CREATED",
+      metaJson: { productId: product.id, name: product.name },
     });
 
     res.status(201).json(product);
@@ -279,12 +264,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const updated = await storage.updateProduct(id, parsed.data);
 
     await storage.createAuditLog({
-      adminId: admin.adminId,
-      action: "UPDATE",
-      entity: "product",
-      entityId: id,
-      details: `Updated product: ${updated?.name}`,
-      ipAddress: getIp(req),
+      actorAdminId: admin.adminId,
+      action: "PRODUCT_UPDATED",
+      metaJson: { productId: id, name: updated?.name },
     });
 
     res.json(updated);
@@ -319,12 +301,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     });
 
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "CREATE",
-      entity: "banner",
-      entityId: banner.id,
-      details: `Created banner: ${banner.title}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "BANNER_CREATED",
+      metaJson: { bannerId: banner.id, title: banner.title },
     });
 
     res.status(201).json(banner);
@@ -350,12 +329,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const updated = await storage.updateBanner(id, parsed.data);
 
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "UPDATE",
-      entity: "banner",
-      entityId: id,
-      details: `Updated banner: ${updated?.title}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "BANNER_UPDATED",
+      metaJson: { bannerId: id, title: updated?.title },
     });
 
     res.json(updated);
@@ -365,61 +341,119 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const id = parseInt(param(req.params.id));
     await storage.deleteBanner(id);
     await storage.createAuditLog({
-      adminId: req.session.admin!.adminId,
-      action: "DELETE",
-      entity: "banner",
-      entityId: id,
-      details: `Deleted banner #${id}`,
-      ipAddress: getIp(req),
+      actorAdminId: req.session.admin!.adminId,
+      action: "BANNER_DELETED",
+      metaJson: { bannerId: id },
     });
     res.json({ message: "Deleted" });
   });
 
-  // Admin user management (SUPER_ADMIN only)
-  app.get("/api/admin/admins", requireSuperAdmin, async (_req: Request, res: Response) => {
-    const a = await storage.getAllAdmins();
-    res.json(a);
+  // ===== ADMIN USER MANAGEMENT (SUPER_ADMIN only) =====
+
+  app.get("/api/admin/users", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const allAdmins = await storage.getAllAdmins();
+    const safe = allAdmins.map(({ pinHash, ...rest }) => rest);
+    res.json(safe);
   });
 
-  app.post("/api/admin/admins", requireSuperAdmin, async (req: Request, res: Response) => {
+  app.post("/api/admin/users", requireSuperAdmin, async (req: Request, res: Response) => {
     const schema = z.object({
-      email: z.string().email(),
-      name: z.string().min(1),
-      role: z.enum(["SUPER_ADMIN", "ADMIN"]).optional(),
+      email: z.string().email("Invalid email format"),
+      pin: z.string().length(6, "PIN must be exactly 6 digits").regex(/^\d{6}$/, "PIN must be exactly 6 digits"),
+      active: z.boolean().optional(),
     });
 
     const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return res.status(400).json({ message: firstError });
+    }
 
-    const existing = await storage.getAdminByEmail(parsed.data.email);
+    const { email, pin, active } = parsed.data;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existing = await storage.getAdminByEmail(normalizedEmail);
     if (existing) return res.status(409).json({ message: "Admin with this email already exists" });
 
+    const pinHash = await bcrypt.hash(pin, 10);
+
     const admin = await storage.createAdmin({
-      email: parsed.data.email,
-      name: parsed.data.name,
-      role: parsed.data.role || "ADMIN",
-      isActive: true,
+      email: normalizedEmail,
+      role: "ADMIN",
+      pinHash,
+      active: active ?? true,
+      createdBy: req.session.admin!.adminId,
     });
 
-    res.status(201).json(admin);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "ADMIN_CREATED",
+      metaJson: { newAdminId: admin.id, email: normalizedEmail },
+    });
+
+    const { pinHash: _, ...safe } = admin;
+    res.status(201).json(safe);
   });
 
-  app.patch("/api/admin/admins/:id", requireSuperAdmin, async (req: Request, res: Response) => {
-    const id = parseInt(param(req.params.id));
+  app.put("/api/admin/users/:id/pin", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = param(req.params.id);
+
+    const schema = z.object({
+      pin: z.string().length(6, "PIN must be exactly 6 digits").regex(/^\d{6}$/, "PIN must be exactly 6 digits"),
+    });
+
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]?.message || "Invalid input";
+      return res.status(400).json({ message: firstError });
+    }
+
     const admin = await storage.getAdminById(id);
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
+    if (admin.role === "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Cannot reset Super Admin PIN via this endpoint" });
+    }
+
+    const pinHash = await bcrypt.hash(parsed.data.pin, 10);
+    await storage.updateAdmin(id, { pinHash });
+
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "PIN_RESET",
+      metaJson: { targetAdminId: id, email: admin.email },
+    });
+
+    res.json({ message: "PIN updated successfully" });
+  });
+
+  app.put("/api/admin/users/:id/status", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = param(req.params.id);
+
     const schema = z.object({
-      name: z.string().optional(),
-      role: z.enum(["SUPER_ADMIN", "ADMIN"]).optional(),
-      isActive: z.boolean().optional(),
+      active: z.boolean(),
     });
 
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
 
-    const updated = await storage.updateAdmin(id, parsed.data);
-    res.json(updated);
+    const admin = await storage.getAdminById(id);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    if (admin.role === "SUPER_ADMIN") {
+      return res.status(403).json({ message: "Cannot disable Super Admin" });
+    }
+
+    const updated = await storage.updateAdmin(id, { active: parsed.data.active });
+
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: parsed.data.active ? "ADMIN_ENABLED" : "ADMIN_DISABLED",
+      metaJson: { targetAdminId: id, email: admin.email },
+    });
+
+    const { pinHash: _, ...safe } = updated!;
+    res.json(safe);
   });
 
   // Dashboard stats
@@ -430,7 +464,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const allAdmins = await storage.getAllAdmins();
       const adminStats = await Promise.all(
         allAdmins.map(async (a) => ({
-          admin: a,
+          admin: { id: a.id, email: a.email, role: a.role, active: a.active },
           stats: await storage.getAdminStats(a.id),
         }))
       );
@@ -441,13 +475,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   // Audit logs
-  app.get("/api/admin/audit-logs", requireAuth, async (req: Request, res: Response) => {
-    const admin = req.session.admin!;
-    if (admin.role === "SUPER_ADMIN") {
-      const logs = await storage.getAuditLogs(100);
-      return res.json(logs);
-    }
-    const logs = await storage.getAuditLogsByAdmin(admin.adminId, 50);
+  app.get("/api/admin/audit-logs", requireSuperAdmin, async (req: Request, res: Response) => {
+    const logs = await storage.getAuditLogs(100);
     res.json(logs);
   });
 

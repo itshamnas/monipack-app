@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { eq, desc, asc, like, and, or, sql } from "drizzle-orm";
 import {
-  admins, categories, products, banners, auditLogs, otpCodes,
+  admins, categories, products, banners, auditLogs,
   type Admin, type InsertAdmin,
   type Category, type InsertCategory,
   type Product, type InsertProduct,
@@ -10,27 +10,19 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
-  // Admins
-  getAdminById(id: number): Promise<Admin | undefined>;
+  getAdminById(id: string): Promise<Admin | undefined>;
   getAdminByEmail(email: string): Promise<Admin | undefined>;
-  getAdminByGoogleId(googleId: string): Promise<Admin | undefined>;
   getAllAdmins(): Promise<Admin[]>;
   createAdmin(admin: InsertAdmin): Promise<Admin>;
-  updateAdmin(id: number, data: Partial<InsertAdmin>): Promise<Admin | undefined>;
+  updateAdmin(id: string, data: Partial<InsertAdmin>): Promise<Admin | undefined>;
+  updateLastLogin(id: string): Promise<void>;
 
-  // OTP
-  createOtp(adminId: number, codeHash: string, expiresAt: Date): Promise<void>;
-  getValidOtp(adminId: number): Promise<{ id: number; codeHash: string } | undefined>;
-  markOtpUsed(id: number): Promise<void>;
-
-  // Categories
   getAllCategories(includeInactive?: boolean): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
   createCategory(cat: InsertCategory): Promise<Category>;
   updateCategory(id: number, data: Partial<InsertCategory>): Promise<Category | undefined>;
 
-  // Products
   getAllProducts(includeInactive?: boolean): Promise<Product[]>;
   getProductById(id: number): Promise<Product | undefined>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
@@ -38,39 +30,29 @@ export interface IStorage {
   searchProducts(query: string): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, data: Partial<InsertProduct>): Promise<Product | undefined>;
-  getProductsByAdmin(adminId: number): Promise<Product[]>;
+  getProductsByAdmin(adminId: string): Promise<Product[]>;
 
-  // Banners
   getAllBanners(includeInactive?: boolean): Promise<Banner[]>;
   getBannerById(id: number): Promise<Banner | undefined>;
   createBanner(banner: InsertBanner): Promise<Banner>;
   updateBanner(id: number, data: Partial<InsertBanner>): Promise<Banner | undefined>;
   deleteBanner(id: number): Promise<void>;
 
-  // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
-  getAuditLogsByAdmin(adminId: number, limit?: number): Promise<AuditLog[]>;
 
-  // Stats
-  getAdminStats(adminId: number): Promise<{ totalProducts: number; activeProducts: number; disabledProducts: number; categoriesManaged: number }>;
+  getAdminStats(adminId: string): Promise<{ totalProducts: number; activeProducts: number; disabledProducts: number; categoriesManaged: number }>;
   getGlobalStats(): Promise<{ totalProducts: number; activeProducts: number; totalCategories: number; activeCategories: number; totalAdmins: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Admins
-  async getAdminById(id: number) {
+  async getAdminById(id: string) {
     const [admin] = await db.select().from(admins).where(eq(admins.id, id));
     return admin;
   }
 
   async getAdminByEmail(email: string) {
     const [admin] = await db.select().from(admins).where(eq(admins.email, email.toLowerCase()));
-    return admin;
-  }
-
-  async getAdminByGoogleId(googleId: string) {
-    const [admin] = await db.select().from(admins).where(eq(admins.googleId, googleId));
     return admin;
   }
 
@@ -83,37 +65,15 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateAdmin(id: number, data: Partial<InsertAdmin>) {
-    const [updated] = await db.update(admins).set(data).where(eq(admins.id, id)).returning();
+  async updateAdmin(id: string, data: Partial<InsertAdmin>) {
+    const [updated] = await db.update(admins).set({ ...data, updatedAt: new Date() }).where(eq(admins.id, id)).returning();
     return updated;
   }
 
-  // OTP
-  async createOtp(adminId: number, codeHash: string, expiresAt: Date) {
-    await db.insert(otpCodes).values({ adminId, codeHash, expiresAt });
+  async updateLastLogin(id: string) {
+    await db.update(admins).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(admins.id, id));
   }
 
-  async getValidOtp(adminId: number) {
-    const [otp] = await db
-      .select({ id: otpCodes.id, codeHash: otpCodes.codeHash })
-      .from(otpCodes)
-      .where(
-        and(
-          eq(otpCodes.adminId, adminId),
-          sql`${otpCodes.expiresAt} > NOW()`,
-          sql`${otpCodes.usedAt} IS NULL`
-        )
-      )
-      .orderBy(desc(otpCodes.createdAt))
-      .limit(1);
-    return otp;
-  }
-
-  async markOtpUsed(id: number) {
-    await db.update(otpCodes).set({ usedAt: new Date() }).where(eq(otpCodes.id, id));
-  }
-
-  // Categories
   async getAllCategories(includeInactive = false) {
     if (includeInactive) {
       return db.select().from(categories).orderBy(asc(categories.sortOrder));
@@ -141,7 +101,6 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  // Products
   async getAllProducts(includeInactive = false) {
     if (includeInactive) {
       return db.select().from(products).orderBy(desc(products.createdAt));
@@ -187,11 +146,10 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getProductsByAdmin(adminId: number) {
+  async getProductsByAdmin(adminId: string) {
     return db.select().from(products).where(eq(products.createdBy, adminId)).orderBy(desc(products.createdAt));
   }
 
-  // Banners
   async getAllBanners(includeInactive = false) {
     if (includeInactive) {
       return db.select().from(banners).orderBy(asc(banners.sortOrder));
@@ -218,7 +176,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(banners).where(eq(banners.id, id));
   }
 
-  // Audit Logs
   async createAuditLog(log: InsertAuditLog) {
     await db.insert(auditLogs).values(log);
   }
@@ -227,12 +184,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(limit);
   }
 
-  async getAuditLogsByAdmin(adminId: number, limit = 50) {
-    return db.select().from(auditLogs).where(eq(auditLogs.adminId, adminId)).orderBy(desc(auditLogs.createdAt)).limit(limit);
-  }
-
-  // Stats
-  async getAdminStats(adminId: number) {
+  async getAdminStats(adminId: string) {
     const adminProducts = await db.select().from(products).where(eq(products.createdBy, adminId));
     const adminCategories = await db.select().from(categories).where(eq(categories.createdBy, adminId));
     return {

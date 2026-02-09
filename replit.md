@@ -1,13 +1,14 @@
 # monipack - Product Catalogue
 
 ## Overview
-A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features Google OAuth + email OTP authentication, role-based admin panel, product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
+A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
-- 2026-02-09: Full frontend rewrite - all pages now use real API calls via TanStack Query instead of mock data
-- 2026-02-09: Admin panel pages complete: Dashboard, Products, Categories, Banners (SUPER_ADMIN), Admin Users (SUPER_ADMIN)
-- 2026-02-09: Auth flow: Login → OTP verification → role-based dashboard
-- 2026-02-09: Cart context with localStorage persistence and WhatsApp inquiry generation
+- 2026-02-09: Complete auth system rewrite - per-user bcrypt-hashed PINs, UUID-based admin IDs
+- 2026-02-09: Removed Google OAuth and email OTP completely
+- 2026-02-09: New admin user management: create admin with email+PIN, reset PIN, enable/disable
+- 2026-02-09: Database schema restructured: admins/audit_logs use UUID PKs, removed otp_codes table
+- 2026-02-09: All admin fetch calls use apiFetch/apiJson with credentials: "include"
 
 ## User Preferences
 - Design: "Rich Red" branding theme (HSL 345 80% 45%)
@@ -21,33 +22,43 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 
 ### Stack
 - **Frontend**: React + Vite + TypeScript, TanStack Query, wouter routing, shadcn/ui components, Tailwind CSS
-- **Backend**: Express.js (v5), Passport.js (Google OAuth), express-session
+- **Backend**: Express.js (v5), bcrypt for PIN hashing, express-session with connect-pg-simple
 - **Database**: PostgreSQL with Drizzle ORM
 - **File uploads**: multer → /uploads directory
 
 ### Key Files
-- `shared/schema.ts` - Drizzle schema (admins, products, categories, banners, audit_logs, otp_codes)
+- `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, audit_logs [uuid])
 - `server/storage.ts` - Storage interface with Drizzle queries
-- `server/auth.ts` - Authentication routes (Google OAuth, dev-login, OTP verification, session)
-- `server/routes.ts` - Public and admin CRUD API routes
-- `server/db.ts` - Database connection
+- `server/auth.ts` - Authentication (email+PIN with bcrypt, session management)
+- `server/routes.ts` - Public and admin CRUD API routes + admin user management
+- `server/db.ts` - Database connection (pg Pool + Drizzle)
 - `client/src/lib/types.ts` - TypeScript types for frontend
+- `client/src/lib/api.ts` - API helpers (apiFetch, apiJson) with credentials: "include"
 - `client/src/App.tsx` - Router with public and admin route groups
 - `client/src/hooks/useAuth.ts` - Authentication hook
 - `client/src/context/CartContext.tsx` - Cart state with localStorage
 
+### Auth System
+- SUPER_ADMIN: auto-provisioned from SUPER_ADMIN_EMAIL + SUPER_ADMIN_PIN env vars
+- ADMIN: created by SUPER_ADMIN via /api/admin/users with their own email + bcrypt-hashed PIN
+- Session: HttpOnly cookie via connect-pg-simple, 24h expiry
+
 ### Role System
-- **SUPER_ADMIN**: Full access - manage banners, admin users, all products/categories
-- **ADMIN**: Can only manage their own products and categories
+- **SUPER_ADMIN**: Full access - manage banners, admin users, all products/categories, audit logs
+- **ADMIN**: Can only manage products and categories (their own products only)
 
 ### Environment Variables
-- `SUPER_ADMIN_EMAIL` - Admin login email (set by developer, e.g. itshamnas@gmail.com)
-- `ADMIN_PIN` - 6-digit PIN for admin login (set by developer, default: 123456)
+- `SUPER_ADMIN_EMAIL` - Super admin email (e.g. itshamnas@gmail.com)
+- `SUPER_ADMIN_PIN` - Super admin 6-digit PIN (bcrypt hashed on first use)
+- `ADMIN_PIN` - Fallback PIN if SUPER_ADMIN_PIN not set
 - `WHATSAPP_NUMBER` - WhatsApp number for inquiry messages
 - `SESSION_SECRET` - Express session secret (stored as secret)
 - `DATABASE_URL` - PostgreSQL connection string (auto-set)
 
 ### API Structure
-Public: GET /api/products, /api/products/:slug, /api/categories, /api/categories/:slug, /api/banners
-Auth: POST /api/auth/dev-login, /api/auth/verify-otp, /api/auth/request-otp, GET /api/auth/google, /api/auth/session, POST /api/auth/logout
-Admin: GET/POST/PATCH /api/admin/products, /api/admin/categories, /api/admin/banners, /api/admin/admins, GET /api/admin/stats, /api/admin/audit-logs, POST /api/admin/upload
+Public: GET /api/products, /api/products/:slug, /api/categories, /api/categories/:slug, /api/banners, /api/config
+Auth: POST /api/auth/login, GET /api/auth/session, POST /api/auth/logout
+Admin: GET/POST/PATCH /api/admin/products, /api/admin/categories, /api/admin/banners
+Admin Users (SUPER_ADMIN only): GET/POST /api/admin/users, PUT /api/admin/users/:id/pin, PUT /api/admin/users/:id/status
+Stats: GET /api/admin/stats, /api/admin/audit-logs
+Upload: POST /api/admin/upload

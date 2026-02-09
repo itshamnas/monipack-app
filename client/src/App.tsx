@@ -28,7 +28,7 @@ function Router() {
             <Route path="/products" component={AdminProducts} />
             <Route path="/categories" component={AdminCategories} />
             <Route path="/banners" component={AdminBanners} />
-            <Route path="/admins" component={AdminUsers} />
+            <Route path="/admin-users" component={AdminUsers} />
             <Route component={AdminDashboard} />
           </Switch>
         </AdminLayout>

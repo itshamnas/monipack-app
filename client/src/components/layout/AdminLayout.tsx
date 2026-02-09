@@ -36,7 +36,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin/products", label: "Products", icon: Package, show: true },
     { href: "/admin/categories", label: "Categories", icon: Layers, show: true },
     { href: "/admin/banners", label: "Banners", icon: Image, show: isSuperAdmin },
-    { href: "/admin/admins", label: "Admin Users", icon: Users, show: isSuperAdmin },
+    { href: "/admin/admin-users", label: "Admin Users", icon: Users, show: isSuperAdmin },
   ];
 
   const NavItems = () => (

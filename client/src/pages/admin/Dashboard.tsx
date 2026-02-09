@@ -101,8 +101,8 @@ export default function AdminDashboard() {
                   <div key={log.id} className="flex items-center gap-4 text-sm">
                     <div className="w-2 h-2 rounded-full bg-primary" />
                     <div className="flex-1">
-                      <p className="font-medium">{log.action}: {log.entity}</p>
-                      <p className="text-muted-foreground">{log.details}</p>
+                      <p className="font-medium">{log.action}</p>
+                      <p className="text-muted-foreground">{log.metaJson?.email || log.metaJson?.name || ""}</p>
                     </div>
                     <div className="text-muted-foreground text-xs">{new Date(log.createdAt).toLocaleString()}</div>
                   </div>

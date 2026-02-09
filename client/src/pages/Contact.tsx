@@ -84,14 +84,14 @@ export default function Contact() {
                 <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium">Head Office</p>
+                  <p className="text-muted-foreground">Bin Hayl-1, Al Maardih St, Ghala, Muscat, Floor 5, Room No. 53, 130</p>
                   <a
                     href="https://maps.app.goo.gl/cp5qwlXzbWkV9PnKI"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
+                    className="text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1 text-sm font-medium mt-1"
                   >
-                    Bin Hayl-1, Al Maardih St, Ghala, Muscat, Floor 5, Room No. 53, 130
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    View on Map <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import type { Category, Banner } from "@/lib/types";
 import { Hero } from "@/components/ui/Hero";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Sparkles, Package, ShieldCheck, Truck, Leaf, Eye, Target } from "lucide-react";
+import { ArrowRight, Star, Truck, ShieldCheck, Leaf, Package, Eye, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiJson } from "@/lib/api";
@@ -128,8 +128,8 @@ export default function Home() {
             <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
               <div className="h-2 bg-blue-500" />
               <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Sparkles className="h-8 w-8 text-blue-500" />
+                <div className="w-24 h-24 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <img src="/images/moniclean-logo.png" alt="MoniClean" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-2">MoniClean</h3>
                 <p className="text-muted-foreground text-sm">Cleaning and hygiene essentials designed for everyday use.</p>
@@ -139,8 +139,8 @@ export default function Home() {
             <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
               <div className="h-2 bg-green-500" />
               <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="h-8 w-8 text-green-500" />
+                <div className="w-24 h-24 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <img src="/images/monifood-logo.png" alt="MoniFood" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-2">MoniFood</h3>
                 <p className="text-muted-foreground text-sm">Safe, high-quality food products for homes and businesses.</p>
@@ -150,8 +150,8 @@ export default function Home() {
             <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
               <div className="h-2 bg-primary" />
               <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Package className="h-8 w-8 text-primary" />
+                <div className="w-24 h-24 mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <img src="/images/monipack-logo.png" alt="MoniPack" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-2">MoniPack</h3>
                 <p className="text-muted-foreground text-sm">Reliable packaging solutions for retail, catering, and industrial needs.</p>

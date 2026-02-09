@@ -56,7 +56,7 @@ export default function Home() {
             <Star className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium text-primary uppercase tracking-wider">Explore</span>
           </div>
-          <h2 className="font-heading text-2xl md:text-3xl font-bold mb-3">Shop by Categories</h2>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold mb-3">What We Sell</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Explore our complete product range by category.
           </p>

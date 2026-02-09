@@ -30,7 +30,7 @@ export function Header() {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="font-heading font-bold text-2xl tracking-tighter text-primary">monipack</Link>
+          <Link href="/"><img src="/images/monipack-logo.png" alt="monipack" className="h-10 object-contain" /></Link>
         </div>
 
         <nav className="hidden md:flex items-center gap-8">

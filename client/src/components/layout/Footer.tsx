@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <img 
-              src="/images/mni-logo.png" 
+              src="/images/logo-header.png" 
               alt="MNI Logo"
               className="h-32 md:h-40 w-auto object-contain bg-transparent"
             />

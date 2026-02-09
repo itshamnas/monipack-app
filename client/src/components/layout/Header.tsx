@@ -23,7 +23,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
               <div className="mt-4 mb-8">
-                <img src="/images/monipack-logo.png" alt="monipack" className="h-12 object-contain" />
+                <img src="/images/logo.png" alt="monipack" className="h-12 object-contain" />
               </div>
               <nav className="flex flex-col gap-4">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Home</Link>
@@ -36,7 +36,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center">
-            <img src="/images/monipack-logo.png" alt="monipack" className="h-14 w-auto object-contain" />
+            <img src="/images/logo.png" alt="monipack" className="h-14 w-auto object-contain" />
           </Link>
         </div>
 

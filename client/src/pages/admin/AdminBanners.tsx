@@ -100,7 +100,12 @@ export default function AdminBanners() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveMutation.mutate({ ...form, subtitle: form.subtitle || undefined, linkUrl: form.linkUrl || undefined });
+    saveMutation.mutate({ 
+      ...form, 
+      title: form.title || undefined,
+      subtitle: form.subtitle || undefined, 
+      linkUrl: form.linkUrl || undefined 
+    });
   };
 
   return (
@@ -112,7 +117,7 @@ export default function AdminBanners() {
           <DialogContent>
             <DialogHeader><DialogTitle>{editingBanner ? "Edit Banner" : "Add Banner"}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div><Label>Title *</Label><Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} required /></div>
+              <div><Label>Title</Label><Input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} /></div>
               <div><Label>Subtitle</Label><Input value={form.subtitle} onChange={e => setForm(p => ({ ...p, subtitle: e.target.value }))} /></div>
               <div>
                 <Label>Image *</Label>

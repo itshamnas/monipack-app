@@ -56,7 +56,7 @@ export const products = pgTable("products", {
 
 export const banners = pgTable("banners", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  title: text("title"),
   subtitle: text("subtitle"),
   image: text("image").notNull(),
   linkUrl: text("link_url"),

@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();

@@ -11,13 +11,13 @@ import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminBanners() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ title: "", subtitle: "", image: "", linkUrl: "", sortOrder: 0, isActive: true });
 
@@ -84,18 +84,6 @@ export default function AdminBanners() {
     setEditingBanner(banner);
     setForm({ title: banner.title, subtitle: banner.subtitle || "", image: banner.image, linkUrl: banner.linkUrl || "", sortOrder: banner.sortOrder, isActive: banner.isActive });
     setIsDialogOpen(true);
-  };
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const formData = new FormData();
-    formData.append("images", files[0]);
-    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
-    if (res.ok) {
-      const { urls } = await res.json();
-      setForm(prev => ({ ...prev, image: urls[0] }));
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

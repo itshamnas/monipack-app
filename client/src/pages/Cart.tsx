@@ -67,26 +67,46 @@ export default function Cart() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("MONIPACK", 14, 22);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    doc.text("Morooj Nizwa International LLC", 14, 28);
-    doc.setTextColor(0);
+    const addLogoToDoc = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0);
+          const imgData = canvas.toDataURL("image/png");
+          const logoHeight = 14;
+          const logoWidth = (img.width / img.height) * logoHeight;
+          doc.addImage(imgData, "PNG", 14, 10, logoWidth, logoHeight);
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = "/images/pdf-logo.png";
+      });
+    };
+
+    await addLogoToDoc();
+
+    doc.setDrawColor(0, 51, 102);
+    doc.setLineWidth(1);
+    doc.line(14, 8, pageWidth - 14, 8);
 
     doc.setFontSize(9);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 14, 18, { align: "right" });
-    doc.text(`Time: ${new Date().toLocaleTimeString()}`, pageWidth - 14, 23, { align: "right" });
+    doc.setTextColor(100);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 14, 15, { align: "right" });
+    doc.text(`Time: ${new Date().toLocaleTimeString()}`, pageWidth - 14, 20, { align: "right" });
+    doc.setTextColor(0);
 
     doc.setDrawColor(200, 30, 60);
-    doc.setLineWidth(0.8);
-    doc.line(14, 32, pageWidth - 14, 32);
+    doc.setLineWidth(0.5);
+    doc.line(14, 28, pageWidth - 14, 28);
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Product Inquiry List", 14, 42);
+    doc.text("Product Inquiry List", 14, 38);
 
     const tableData = cart.map((item, index) => {
       const catName = getCategoryName(item.product.categoryId);
@@ -100,7 +120,7 @@ export default function Cart() {
     });
 
     autoTable(doc, {
-      startY: 48,
+      startY: 44,
       head: [["#", "Product Name", "Part Number", "Category", "Qty"]],
       body: tableData,
       headStyles: {

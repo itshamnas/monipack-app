@@ -1,31 +1,17 @@
-import { MapPin, Clock, Phone } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { RetailOutlet } from "@/lib/types";
+import { MapPin, Clock, Phone, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const outlets = [
-  {
-    id: 1,
-    name: "Monipack Muscat Outlet",
-    address: "Al Khuwair, Muscat, Oman",
-    phone: "+968 1234 5678",
-    hours: "Sat–Thu: 8:00 AM – 8:00 PM",
-  },
-  {
-    id: 2,
-    name: "Monipack Salalah Outlet",
-    address: "Al Saada, Salalah, Oman",
-    phone: "+968 2345 6789",
-    hours: "Sat–Thu: 8:00 AM – 8:00 PM",
-  },
-  {
-    id: 3,
-    name: "Monipack Sohar Outlet",
-    address: "Industrial Area, Sohar, Oman",
-    phone: "+968 3456 7890",
-    hours: "Sat–Thu: 8:00 AM – 6:00 PM",
-  },
-];
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson } from "@/lib/api";
 
 export default function RetailOutlets() {
+  const { data: outlets = [], isLoading } = useQuery<RetailOutlet[]>({
+    queryKey: ["retail-outlets"],
+    queryFn: () => apiJson<RetailOutlet[]>("/api/retail-outlets"),
+  });
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="text-center mb-12">
@@ -35,29 +21,54 @@ export default function RetailOutlets() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {outlets.map((outlet) => (
-          <Card key={outlet.id} className="hover:shadow-lg transition-shadow" data-testid={`card-outlet-${outlet.id}`}>
-            <CardContent className="p-6">
-              <h3 className="font-heading text-xl font-semibold mb-4">{outlet.name}</h3>
-              <div className="space-y-3 text-muted-foreground">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                  <span>{outlet.address}</span>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-80 rounded-lg" />)}
+        </div>
+      ) : outlets.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {outlets.map((outlet) => (
+            <Card key={outlet.id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`card-outlet-${outlet.id}`}>
+              {outlet.image && (
+                <div className="aspect-video relative">
+                  <img src={outlet.image} alt={outlet.name} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-primary shrink-0" />
-                  <span>{outlet.phone}</span>
+              )}
+              <CardContent className="p-6">
+                <h3 className="font-heading text-xl font-semibold mb-4">{outlet.name}</h3>
+                <div className="space-y-3 text-muted-foreground">
+                  {outlet.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-5 w-5 text-primary shrink-0" />
+                      <a href={`tel:${outlet.phone}`} className="hover:text-primary transition-colors">{outlet.phone}</a>
+                    </div>
+                  )}
+                  {outlet.hours && (
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-primary shrink-0" />
+                      <span>{outlet.hours}</span>
+                    </div>
+                  )}
+                  {outlet.mapUrl && (
+                    <Button asChild variant="outline" className="w-full mt-4" data-testid={`button-map-${outlet.id}`}>
+                      <a href={outlet.mapUrl} target="_blank" rel="noopener noreferrer">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        View on Google Maps
+                        <ExternalLink className="h-3 w-3 ml-2" />
+                      </a>
+                    </Button>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-primary shrink-0" />
-                  <span>{outlet.hours}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-24 bg-muted/30 rounded-lg">
+          <h3 className="font-heading text-xl font-semibold mb-2">No retail outlets listed yet</h3>
+          <p className="text-muted-foreground">Check back soon for our outlet locations.</p>
+        </div>
+      )}
     </div>
   );
 }

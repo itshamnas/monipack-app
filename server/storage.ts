@@ -1,12 +1,14 @@
 import { db } from "./db";
 import { eq, desc, asc, ilike, and, or, sql } from "drizzle-orm";
 import {
-  admins, categories, products, banners, auditLogs,
+  admins, categories, products, banners, auditLogs, retailOutlets, warehouses,
   type Admin, type InsertAdmin,
   type Category, type InsertCategory,
   type Product, type InsertProduct,
   type Banner, type InsertBanner,
   type AuditLog, type InsertAuditLog,
+  type RetailOutlet, type InsertRetailOutlet,
+  type Warehouse, type InsertWarehouse,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -37,6 +39,18 @@ export interface IStorage {
   createBanner(banner: InsertBanner): Promise<Banner>;
   updateBanner(id: number, data: Partial<InsertBanner>): Promise<Banner | undefined>;
   deleteBanner(id: number): Promise<void>;
+
+  getAllRetailOutlets(includeInactive?: boolean): Promise<RetailOutlet[]>;
+  getRetailOutletById(id: number): Promise<RetailOutlet | undefined>;
+  createRetailOutlet(outlet: InsertRetailOutlet): Promise<RetailOutlet>;
+  updateRetailOutlet(id: number, data: Partial<InsertRetailOutlet>): Promise<RetailOutlet | undefined>;
+  deleteRetailOutlet(id: number): Promise<void>;
+
+  getAllWarehouses(includeInactive?: boolean): Promise<Warehouse[]>;
+  getWarehouseById(id: number): Promise<Warehouse | undefined>;
+  createWarehouse(wh: InsertWarehouse): Promise<Warehouse>;
+  updateWarehouse(id: number, data: Partial<InsertWarehouse>): Promise<Warehouse | undefined>;
+  deleteWarehouse(id: number): Promise<void>;
 
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
@@ -181,6 +195,54 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBanner(id: number) {
     await db.delete(banners).where(eq(banners.id, id));
+  }
+
+  async getAllRetailOutlets(includeInactive = false) {
+    if (includeInactive) return db.select().from(retailOutlets).orderBy(desc(retailOutlets.createdAt));
+    return db.select().from(retailOutlets).where(eq(retailOutlets.isActive, true)).orderBy(desc(retailOutlets.createdAt));
+  }
+
+  async getRetailOutletById(id: number) {
+    const [outlet] = await db.select().from(retailOutlets).where(eq(retailOutlets.id, id));
+    return outlet;
+  }
+
+  async createRetailOutlet(outlet: InsertRetailOutlet) {
+    const [created] = await db.insert(retailOutlets).values(outlet).returning();
+    return created;
+  }
+
+  async updateRetailOutlet(id: number, data: Partial<InsertRetailOutlet>) {
+    const [updated] = await db.update(retailOutlets).set({ ...data, updatedAt: new Date() }).where(eq(retailOutlets.id, id)).returning();
+    return updated;
+  }
+
+  async deleteRetailOutlet(id: number) {
+    await db.delete(retailOutlets).where(eq(retailOutlets.id, id));
+  }
+
+  async getAllWarehouses(includeInactive = false) {
+    if (includeInactive) return db.select().from(warehouses).orderBy(desc(warehouses.createdAt));
+    return db.select().from(warehouses).where(eq(warehouses.isActive, true)).orderBy(desc(warehouses.createdAt));
+  }
+
+  async getWarehouseById(id: number) {
+    const [wh] = await db.select().from(warehouses).where(eq(warehouses.id, id));
+    return wh;
+  }
+
+  async createWarehouse(wh: InsertWarehouse) {
+    const [created] = await db.insert(warehouses).values(wh).returning();
+    return created;
+  }
+
+  async updateWarehouse(id: number, data: Partial<InsertWarehouse>) {
+    const [updated] = await db.update(warehouses).set({ ...data, updatedAt: new Date() }).where(eq(warehouses.id, id)).returning();
+    return updated;
+  }
+
+  async deleteWarehouse(id: number) {
+    await db.delete(warehouses).where(eq(warehouses.id, id));
   }
 
   async createAuditLog(log: InsertAuditLog) {

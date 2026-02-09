@@ -64,6 +64,32 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface RetailOutlet {
+  id: number;
+  name: string;
+  image: string | null;
+  mapUrl: string | null;
+  phone: string | null;
+  hours: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Warehouse {
+  id: number;
+  name: string;
+  image: string | null;
+  mapUrl: string | null;
+  phone: string | null;
+  hours: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   authenticated: boolean;
   admin?: {

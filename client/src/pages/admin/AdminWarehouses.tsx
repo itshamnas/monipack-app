@@ -1,0 +1,188 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Warehouse } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useState, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson, apiFetch } from "@/lib/api";
+
+export default function AdminWarehouses() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Warehouse | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [form, setForm] = useState({ name: "", image: "", mapUrl: "", phone: "", hours: "", isActive: true });
+
+  const { data: warehouses = [], isLoading } = useQuery<Warehouse[]>({
+    queryKey: ["admin-warehouses"],
+    queryFn: () => apiJson<Warehouse[]>("/api/admin/warehouses"),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const url = editing ? `/api/admin/warehouses/${editing.id}` : "/api/admin/warehouses";
+      const method = editing ? "PATCH" : "POST";
+      const res = await apiFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Save failed"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-warehouses"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      setIsDialogOpen(false);
+      resetForm();
+      toast({ title: editing ? "Warehouse updated" : "Warehouse created" });
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      const res = await apiFetch(`/api/admin/warehouses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Toggle failed"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-warehouses"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast({ title: "Warehouse updated" });
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiFetch(`/api/admin/warehouses/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-warehouses"] });
+      queryClient.invalidateQueries({ queryKey: ["warehouses"] });
+      toast({ title: "Warehouse deleted" });
+    },
+  });
+
+  const resetForm = () => {
+    setForm({ name: "", image: "", mapUrl: "", phone: "", hours: "", isActive: true });
+    setEditing(null);
+  };
+
+  const openEdit = (wh: Warehouse) => {
+    setEditing(wh);
+    setForm({
+      name: wh.name,
+      image: wh.image || "",
+      mapUrl: wh.mapUrl || "",
+      phone: wh.phone || "",
+      hours: wh.hours || "",
+      isActive: wh.isActive,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const formData = new FormData();
+    formData.append("images", files[0]);
+    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
+    if (res.ok) {
+      const { urls } = await res.json();
+      setForm(prev => ({ ...prev, image: urls[0] }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate({
+      name: form.name,
+      image: form.image || undefined,
+      mapUrl: form.mapUrl || undefined,
+      phone: form.phone || undefined,
+      hours: form.hours || undefined,
+      isActive: form.isActive,
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="font-heading text-3xl font-bold">Warehouses</h1>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Warehouse</Button></DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>{editing ? "Edit Warehouse" : "Add Warehouse"}</DialogTitle></DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required data-testid="input-warehouse-name" /></div>
+              <div>
+                <Label>Image</Label>
+                <div className="flex gap-2 items-center mt-1">
+                  {form.image && <img src={form.image} alt="" className="w-24 h-16 rounded object-cover border" />}
+                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload</Button>
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+              </div>
+              <div><Label>Google Maps URL</Label><Input value={form.mapUrl} onChange={e => setForm(p => ({ ...p, mapUrl: e.target.value }))} placeholder="https://maps.google.com/..." data-testid="input-warehouse-map" /></div>
+              <div><Label>Phone Number</Label><Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="+968 1234 5678" data-testid="input-warehouse-phone" /></div>
+              <div><Label>Working Hours</Label><Input value={form.hours} onChange={e => setForm(p => ({ ...p, hours: e.target.value }))} placeholder="Sat-Thu 9:00 AM - 10:00 PM" data-testid="input-warehouse-hours" /></div>
+              <div className="flex items-center gap-2"><Switch checked={form.isActive} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} /><Label>Active</Label></div>
+              <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : editing ? "Update Warehouse" : "Create Warehouse"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1, 2].map(i => <Skeleton key={i} className="h-48" />)}</div>
+      ) : warehouses.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {warehouses.map((wh) => (
+            <Card key={wh.id} className="overflow-hidden" data-testid={`admin-warehouse-${wh.id}`}>
+              {wh.image && (
+                <div className="aspect-video relative">
+                  <img src={wh.image} alt={wh.name} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-lg">{wh.name}</h3>
+                    {wh.phone && <p className="text-sm text-muted-foreground">{wh.phone}</p>}
+                    {wh.hours && <p className="text-sm text-muted-foreground">{wh.hours}</p>}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(wh)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteMutation.mutate(wh.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3">
+                  <Switch checked={wh.isActive} onCheckedChange={(checked) => toggleMutation.mutate({ id: wh.id, isActive: checked })} />
+                  <span className="text-sm text-muted-foreground">{wh.isActive ? "Active" : "Inactive"}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-muted/30 rounded-lg">
+          <p className="text-muted-foreground">No warehouses yet. Add one to display on the public page.</p>
+        </div>
+      )}
+    </div>
+  );
+}

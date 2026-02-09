@@ -1,0 +1,119 @@
+PROMPT FOR REPLIT (COPY–PASTE)
+
+Task: Update navbar + add Retail Outlets & Warehouses modules + show search bar only on Products page
+
+Navbar changes
+
+Replace navbar links with:
+
+Home (/)
+
+Products (/products)
+
+Retail Outlets (/retail-outlets)
+
+Warehouses (/warehouses)
+
+Contact Us (/contact)
+
+Career (/career)
+
+Remove “Catalogue”
+
+Remove “Categories”
+
+Search bar behavior
+
+The search bar must appear ONLY on /products page.
+
+On all other pages (Home, Retail Outlets, Warehouses, etc.) the search bar must be hidden.
+
+If the search input currently lives in Header.tsx, move it to Products page OR render it conditionally based on route.
+
+Retail Outlets page
+
+Create page /retail-outlets with cards/list layout.
+
+Each outlet must show:
+
+Outlet name
+
+Outlet image (uploaded by Super Admin)
+
+Google Maps link (open in new tab)
+
+Mobile number (click-to-call)
+
+Working hours (e.g., “Sat–Thu 9:00 AM – 10:00 PM”)
+
+Design should be clean/professional, same visual style as product cards.
+
+Warehouses page
+
+Create page /warehouses with the same format as Retail Outlets:
+
+Warehouse name
+
+Warehouse image (uploaded by Super Admin)
+
+Google Maps link
+
+Mobile number
+
+Working hours
+
+Admin panel
+
+Add a separate admin section like Products for:
+
+Retail Outlets management: /admin/retail-outlets
+
+Warehouses management: /admin/warehouses
+
+Super Admin can:
+
+Add / Edit / Delete outlet/warehouse
+
+Upload image for each one (same upload pipeline used for product photos)
+
+Toggle Active (active only shown on public pages)
+
+Public pages must show only Active entries.
+
+Backend / DB
+
+Create DB tables and API endpoints similar to products:
+
+retail_outlets table: id, name, imageUrl, mapUrl, phone, hours, isActive, createdAt, updatedAt
+
+warehouses table: same fields
+
+Endpoints:
+
+GET /api/retail-outlets (public: active only)
+
+GET /api/warehouses (public: active only)
+
+GET/POST/PUT/DELETE /api/admin/retail-outlets
+
+GET/POST/PUT/DELETE /api/admin/warehouses
+
+Make sure image URLs resolve correctly from uploads/public.
+
+Final check
+
+After implementation:
+
+Products page shows search bar
+
+Other pages hide it
+
+Retail Outlets and Warehouses pages load data from DB
+
+Admin can upload images and manage records
+
+Navigation works correctly
+
+Super important (so you don’t get “broken image”)
+
+For outlet/warehouse images, use the same approach you used for banners/products (store imageUrl from upload response and render it directly).

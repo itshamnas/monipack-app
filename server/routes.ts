@@ -104,6 +104,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(b);
   });
 
+  app.get("/api/retail-outlets", async (_req: Request, res: Response) => {
+    const outlets = await storage.getAllRetailOutlets(false);
+    res.json(outlets);
+  });
+
+  app.get("/api/warehouses", async (_req: Request, res: Response) => {
+    const whs = await storage.getAllWarehouses(false);
+    res.json(whs);
+  });
+
   // ===== ADMIN API =====
 
   app.post("/api/admin/upload", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
@@ -353,6 +363,152 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       actorAdminId: req.session.admin!.adminId,
       action: "BANNER_DELETED",
       metaJson: { bannerId: id },
+    });
+    res.json({ message: "Deleted" });
+  });
+
+  // Admin retail outlets (SUPER_ADMIN only)
+  app.get("/api/admin/retail-outlets", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const outlets = await storage.getAllRetailOutlets(true);
+    res.json(outlets);
+  });
+
+  app.post("/api/admin/retail-outlets", requireSuperAdmin, async (req: Request, res: Response) => {
+    const schema = z.object({
+      name: z.string().min(1),
+      image: z.string().optional(),
+      mapUrl: z.string().optional(),
+      phone: z.string().optional(),
+      hours: z.string().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const outlet = await storage.createRetailOutlet({
+      ...parsed.data,
+      image: parsed.data.image || null,
+      mapUrl: parsed.data.mapUrl || null,
+      phone: parsed.data.phone || null,
+      hours: parsed.data.hours || null,
+      isActive: parsed.data.isActive ?? true,
+      createdBy: req.session.admin!.adminId,
+    });
+
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "RETAIL_OUTLET_CREATED",
+      metaJson: { outletId: outlet.id, name: outlet.name },
+    });
+
+    res.status(201).json(outlet);
+  });
+
+  app.patch("/api/admin/retail-outlets/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    const outlet = await storage.getRetailOutletById(id);
+    if (!outlet) return res.status(404).json({ message: "Retail outlet not found" });
+
+    const schema = z.object({
+      name: z.string().optional(),
+      image: z.string().nullable().optional(),
+      mapUrl: z.string().nullable().optional(),
+      phone: z.string().nullable().optional(),
+      hours: z.string().nullable().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const updated = await storage.updateRetailOutlet(id, parsed.data);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "RETAIL_OUTLET_UPDATED",
+      metaJson: { outletId: id, name: updated?.name },
+    });
+    res.json(updated);
+  });
+
+  app.delete("/api/admin/retail-outlets/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    await storage.deleteRetailOutlet(id);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "RETAIL_OUTLET_DELETED",
+      metaJson: { outletId: id },
+    });
+    res.json({ message: "Deleted" });
+  });
+
+  // Admin warehouses (SUPER_ADMIN only)
+  app.get("/api/admin/warehouses", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const whs = await storage.getAllWarehouses(true);
+    res.json(whs);
+  });
+
+  app.post("/api/admin/warehouses", requireSuperAdmin, async (req: Request, res: Response) => {
+    const schema = z.object({
+      name: z.string().min(1),
+      image: z.string().optional(),
+      mapUrl: z.string().optional(),
+      phone: z.string().optional(),
+      hours: z.string().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const wh = await storage.createWarehouse({
+      ...parsed.data,
+      image: parsed.data.image || null,
+      mapUrl: parsed.data.mapUrl || null,
+      phone: parsed.data.phone || null,
+      hours: parsed.data.hours || null,
+      isActive: parsed.data.isActive ?? true,
+      createdBy: req.session.admin!.adminId,
+    });
+
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "WAREHOUSE_CREATED",
+      metaJson: { warehouseId: wh.id, name: wh.name },
+    });
+
+    res.status(201).json(wh);
+  });
+
+  app.patch("/api/admin/warehouses/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    const wh = await storage.getWarehouseById(id);
+    if (!wh) return res.status(404).json({ message: "Warehouse not found" });
+
+    const schema = z.object({
+      name: z.string().optional(),
+      image: z.string().nullable().optional(),
+      mapUrl: z.string().nullable().optional(),
+      phone: z.string().nullable().optional(),
+      hours: z.string().nullable().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const updated = await storage.updateWarehouse(id, parsed.data);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "WAREHOUSE_UPDATED",
+      metaJson: { warehouseId: id, name: updated?.name },
+    });
+    res.json(updated);
+  });
+
+  app.delete("/api/admin/warehouses/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    await storage.deleteWarehouse(id);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "WAREHOUSE_DELETED",
+      metaJson: { warehouseId: id },
     });
     res.json({ message: "Deleted" });
   });

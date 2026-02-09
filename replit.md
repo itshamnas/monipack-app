@@ -4,6 +4,9 @@
 A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
+- 2026-02-09: Added Retail Outlets and Warehouses modules (DB tables, CRUD API, admin pages, public pages)
+- 2026-02-09: Search bar moved from Header to Products page only
+- 2026-02-09: Navigation updated: Home, Products, Retail Outlets, Warehouses, Contact Us, Career
 - 2026-02-09: Complete auth system rewrite - per-user bcrypt-hashed PINs, UUID-based admin IDs
 - 2026-02-09: Removed Google OAuth and email OTP completely
 - 2026-02-09: New admin user management: create admin with email+PIN, reset PIN, enable/disable
@@ -27,7 +30,7 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - **File uploads**: multer → /uploads directory
 
 ### Key Files
-- `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, audit_logs [uuid])
+- `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, retail_outlets, warehouses, audit_logs [uuid])
 - `server/storage.ts` - Storage interface with Drizzle queries
 - `server/auth.ts` - Authentication (email+PIN with bcrypt, session management)
 - `server/routes.ts` - Public and admin CRUD API routes + admin user management
@@ -44,7 +47,7 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - Session: HttpOnly cookie via connect-pg-simple, 24h expiry
 
 ### Role System
-- **SUPER_ADMIN**: Full access - manage banners, admin users, all products/categories, audit logs
+- **SUPER_ADMIN**: Full access - manage banners, retail outlets, warehouses, admin users, all products/categories, audit logs
 - **ADMIN**: Can only manage products and categories (their own products only)
 
 ### Environment Variables
@@ -56,9 +59,10 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - `DATABASE_URL` - PostgreSQL connection string (auto-set)
 
 ### API Structure
-Public: GET /api/products, /api/products/:slug, /api/categories, /api/categories/:slug, /api/banners, /api/config
+Public: GET /api/products, /api/products/:slug, /api/categories, /api/categories/:slug, /api/banners, /api/retail-outlets, /api/warehouses, /api/config
 Auth: POST /api/auth/login, GET /api/auth/session, POST /api/auth/logout
 Admin: GET/POST/PATCH /api/admin/products, /api/admin/categories, /api/admin/banners
+Admin Outlets/Warehouses (SUPER_ADMIN): GET/POST/PATCH/DELETE /api/admin/retail-outlets, /api/admin/warehouses
 Admin Users (SUPER_ADMIN only): GET/POST /api/admin/users, PUT /api/admin/users/:id/pin, PUT /api/admin/users/:id/status
 Stats: GET /api/admin/stats, /api/admin/audit-logs
 Upload: POST /api/admin/upload

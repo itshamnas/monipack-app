@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Package, Layers, Image, Users, LogOut, Menu, Shield
+  LayoutDashboard, Package, Layers, Image, Users, LogOut, Menu, Shield, Store, Warehouse
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -41,6 +41,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin/products", label: "Products", icon: Package, show: true },
     { href: "/admin/categories", label: "Categories", icon: Layers, show: true },
     { href: "/admin/banners", label: "Banners", icon: Image, show: isSuperAdmin },
+    { href: "/admin/retail-outlets", label: "Retail Outlets", icon: Store, show: isSuperAdmin },
+    { href: "/admin/warehouses", label: "Warehouses", icon: Warehouse, show: isSuperAdmin },
     { href: "/admin/admin-users", label: "Admin Users", icon: Users, show: isSuperAdmin },
   ];
 
@@ -88,9 +90,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <span className="font-heading font-bold ml-4">Admin Panel</span>
       </div>
       <main className="flex-1 p-6 md:p-8 mt-16 md:mt-0 overflow-auto relative z-10">
-        <div className="mb-4 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-mono rounded" data-testid="debug-pathname">
-          DEBUG pathname: {location}
-        </div>
         {children}
       </main>
       <Toaster />

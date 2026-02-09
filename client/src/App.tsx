@@ -19,6 +19,8 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBanners from "./pages/admin/AdminBanners";
+import AdminRetailOutlets from "./pages/admin/AdminRetailOutlets";
+import AdminWarehouses from "./pages/admin/AdminWarehouses";
 import AdminUsers from "./pages/admin/AdminUsers";
 
 function Router() {
@@ -33,6 +35,12 @@ function Router() {
       </Route>
       <Route path="/admin/banners">
         <AdminLayout><AdminBanners /></AdminLayout>
+      </Route>
+      <Route path="/admin/retail-outlets">
+        <AdminLayout><AdminRetailOutlets /></AdminLayout>
+      </Route>
+      <Route path="/admin/warehouses">
+        <AdminLayout><AdminWarehouses /></AdminLayout>
       </Route>
       <Route path="/admin/admin-users">
         <AdminLayout><AdminUsers /></AdminLayout>

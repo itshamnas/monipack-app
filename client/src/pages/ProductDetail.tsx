@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiJson } from "@/lib/api";
+import { ShareButton } from "@/components/ui/ShareButton";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -103,16 +104,19 @@ export default function ProductDetail() {
             <div className="text-3xl font-bold text-primary mb-6">${parseFloat(product.price).toFixed(2)}</div>
           )}
           <div className="prose text-muted-foreground mb-8"><p>{product.description}</p></div>
-          <div className="mt-auto p-6 bg-muted/30 rounded-xl border border-border/50">
-            <h3 className="font-heading font-semibold mb-4 flex items-center gap-2"><Package className="h-4 w-4" /> Add to Inquiry</h3>
-            <div className="flex gap-4">
-              <div className="w-24">
-                <Input type="number" min="1" value={qty} onChange={(e) => setQty(parseInt(e.target.value) || 1)} className="bg-background" />
+          <div className="mt-auto space-y-4">
+            <div className="p-6 bg-muted/30 rounded-xl border border-border/50">
+              <h3 className="font-heading font-semibold mb-4 flex items-center gap-2"><Package className="h-4 w-4" /> Add to Inquiry</h3>
+              <div className="flex gap-4">
+                <div className="w-24">
+                  <Input type="number" min="1" value={qty} onChange={(e) => setQty(parseInt(e.target.value) || 1)} className="bg-background" data-testid="input-quantity" />
+                </div>
+                <Button className="flex-1" size="lg" disabled={!product.isActive} onClick={() => addToCart(product, qty)} data-testid="button-add-to-cart">
+                  <ShoppingCart className="mr-2 h-4 w-4" /> {product.isActive ? "Add to Cart" : "Unavailable"}
+                </Button>
               </div>
-              <Button className="flex-1" size="lg" disabled={!product.isActive} onClick={() => addToCart(product, qty)}>
-                <ShoppingCart className="mr-2 h-4 w-4" /> {product.isActive ? "Add to Cart" : "Unavailable"}
-              </Button>
             </div>
+            <ShareButton product={product} variant="default" className="w-full" />
           </div>
         </div>
       </div>

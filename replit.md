@@ -4,6 +4,11 @@
 A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
+- 2026-02-09: WhatsApp inquiry enhanced - product deep links, category, improved message format
+- 2026-02-09: Share button added to ProductCard and ProductDetail (clipboard + native share)
+- 2026-02-09: PDF export for inquiry list (jspdf + jspdf-autotable) with company header
+- 2026-02-09: "Send PDF via WhatsApp" button with download fallback
+- 2026-02-09: WhatsApp number set to +96879062219
 - 2026-02-09: Added Retail Outlets and Warehouses modules (DB tables, CRUD API, admin pages, public pages)
 - 2026-02-09: Search bar moved from Header to Products page only
 - 2026-02-09: Navigation updated: Home, Products, Retail Outlets, Warehouses, Contact Us, Career

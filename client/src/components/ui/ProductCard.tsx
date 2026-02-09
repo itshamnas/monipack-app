@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { ShoppingCart, Eye } from "lucide-react";
+import { ShareButton } from "@/components/ui/ShareButton";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
@@ -21,8 +22,9 @@ export function ProductCard({ product }: { product: Product }) {
         )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
           <Link href={`/products/${product.slug}`}>
-            <Button variant="secondary" size="icon" className="rounded-full h-10 w-10"><Eye className="h-5 w-5" /></Button>
+            <Button variant="secondary" size="icon" className="rounded-full h-10 w-10" data-testid={`view-product-${product.id}`}><Eye className="h-5 w-5" /></Button>
           </Link>
+          <ShareButton product={product} variant="icon" />
           {product.isActive && (
             <Button size="icon" className="rounded-full h-10 w-10" onClick={() => addToCart(product, 1)} data-testid={`add-to-cart-${product.id}`}>
               <ShoppingCart className="h-5 w-5" />

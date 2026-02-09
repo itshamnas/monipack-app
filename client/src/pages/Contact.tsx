@@ -13,12 +13,18 @@ export default function Contact() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      toast({ title: "Message sent!", description: "We'll get back to you shortly." });
-      (e.target as HTMLFormElement).reset();
-    }, 1000);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const subject = formData.get("subject") as string;
+    const message = formData.get("message") as string;
+
+    const mailtoBody = `Name: ${name}\nEmail: ${email}\n\n${message}`;
+    const mailtoLink = `mailto:info@monipack.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailtoBody)}`;
+    window.location.href = mailtoLink;
+
+    toast({ title: "Opening your email client...", description: "Your message will be sent to info@monipack.com" });
   };
 
   return (
@@ -26,7 +32,7 @@ export default function Contact() {
       <div className="text-center mb-12">
         <h1 className="font-heading text-4xl font-bold mb-4">Contact Us</h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Have questions about our packaging solutions? We'd love to hear from you.
+          Have questions about our products? We'd love to hear from you.
         </p>
       </div>
 
@@ -66,28 +72,28 @@ export default function Contact() {
                 <MapPin className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium">Head Office</p>
-                  <p className="text-muted-foreground">Rusayl Industrial Estate, Muscat, Oman</p>
+                  <p className="text-muted-foreground">Bin Hayl-1, Al Maardih St, Ghala, Muscat, Floor 5, Room No. 53, 130</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Phone</p>
-                  <p className="text-muted-foreground">+968 1234 5678</p>
+                  <a href="tel:+96879062219" className="text-muted-foreground hover:text-primary transition-colors">+968 7906 2219</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary shrink-0" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <p className="text-muted-foreground">info@monipack.com</p>
+                  <a href="mailto:info@monipack.com" className="text-muted-foreground hover:text-primary transition-colors">info@monipack.com</a>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-primary shrink-0" />
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium">Working Hours</p>
-                  <p className="text-muted-foreground">Sat–Thu: 8:00 AM – 5:00 PM</p>
+                  <p className="text-muted-foreground">8:00 AM – 2:00 PM &amp; 3:00 PM – 7:00 PM</p>
                 </div>
               </div>
             </CardContent>

@@ -21,17 +21,20 @@ function Router() {
   return (
     <Switch>
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" nest>
-        <AdminLayout>
-          <Switch>
-            <Route path="/" component={AdminDashboard} />
-            <Route path="/products" component={AdminProducts} />
-            <Route path="/categories" component={AdminCategories} />
-            <Route path="/banners" component={AdminBanners} />
-            <Route path="/admin-users" component={AdminUsers} />
-            <Route component={AdminDashboard} />
-          </Switch>
-        </AdminLayout>
+      <Route path="/admin/products">
+        <AdminLayout><AdminProducts /></AdminLayout>
+      </Route>
+      <Route path="/admin/categories">
+        <AdminLayout><AdminCategories /></AdminLayout>
+      </Route>
+      <Route path="/admin/banners">
+        <AdminLayout><AdminBanners /></AdminLayout>
+      </Route>
+      <Route path="/admin/admin-users">
+        <AdminLayout><AdminUsers /></AdminLayout>
+      </Route>
+      <Route path="/admin">
+        <AdminLayout><AdminDashboard /></AdminLayout>
       </Route>
 
       <Route>

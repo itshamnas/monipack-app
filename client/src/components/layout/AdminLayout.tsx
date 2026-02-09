@@ -31,6 +31,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     setLocation("/admin/login");
   };
 
+  const isActive = (href: string) => {
+    if (href === "/admin") return location === "/admin";
+    return location.startsWith(href);
+  };
+
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard, show: true },
     { href: "/admin/products", label: "Products", icon: Package, show: true },
@@ -42,27 +47,28 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const NavItems = () => (
     <>
       <div className="px-3 py-4">
-        <Link href="/" className="font-heading font-bold text-xl tracking-tighter text-primary block mb-1">monipack</Link>
+        <a href="/" className="font-heading font-bold text-xl tracking-tighter text-primary block mb-1">monipack</a>
         <Badge variant={isSuperAdmin ? "default" : "secondary"} className="text-xs">
           <Shield className="h-3 w-3 mr-1" />{admin?.role}
         </Badge>
       </div>
       <div className="px-3 py-2 space-y-1">
         {navItems.filter(n => n.show).map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}>
-            <Button
-              variant={location === href ? "secondary" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <Icon className="mr-2 h-4 w-4" />{label}
-            </Button>
+          <Link key={href} href={href} onClick={() => setIsMobileMenuOpen(false)}
+            className={`flex items-center w-full rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              isActive(href)
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+            data-testid={`nav-${label.toLowerCase().replace(/\s+/g, "-")}`}
+          >
+            <Icon className="mr-2 h-4 w-4" />{label}
           </Link>
         ))}
       </div>
       <div className="mt-auto p-4 border-t">
         <p className="text-xs text-muted-foreground mb-2 truncate">{admin?.email}</p>
-        <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleLogout}>
+        <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleLogout} data-testid="button-logout">
           <LogOut className="mr-2 h-4 w-4" />Logout
         </Button>
       </div>
@@ -71,7 +77,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-muted/10">
-      <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0"><NavItems /></aside>
+      <aside className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0 z-40" style={{ pointerEvents: "auto" }}>
+        <NavItems />
+      </aside>
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-card flex items-center px-4 z-50">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
@@ -79,7 +87,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </Sheet>
         <span className="font-heading font-bold ml-4">Admin Panel</span>
       </div>
-      <main className="flex-1 p-6 md:p-8 mt-16 md:mt-0 overflow-auto">{children}</main>
+      <main className="flex-1 p-6 md:p-8 mt-16 md:mt-0 overflow-auto relative z-10">
+        <div className="mb-4 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-mono rounded" data-testid="debug-pathname">
+          DEBUG pathname: {location}
+        </div>
+        {children}
+      </main>
       <Toaster />
     </div>
   );

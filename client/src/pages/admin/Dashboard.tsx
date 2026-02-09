@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Layers, Users, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
@@ -117,15 +116,17 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
-            <Link href="/admin/products">
-              <Button variant="outline" className="h-20 w-full flex flex-col gap-2">
-                <Package className="h-6 w-6" /> Manage Products
-              </Button>
+            <Link href="/admin/products"
+              className="h-20 w-full flex flex-col items-center justify-center gap-2 rounded-md border border-input bg-background text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+              data-testid="link-manage-products"
+            >
+              <Package className="h-6 w-6" /> Manage Products
             </Link>
-            <Link href="/admin/categories">
-              <Button variant="outline" className="h-20 w-full flex flex-col gap-2">
-                <Layers className="h-6 w-6" /> Manage Categories
-              </Button>
+            <Link href="/admin/categories"
+              className="h-20 w-full flex flex-col items-center justify-center gap-2 rounded-md border border-input bg-background text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+              data-testid="link-manage-categories"
+            >
+              <Layers className="h-6 w-6" /> Manage Categories
             </Link>
           </CardContent>
         </Card>

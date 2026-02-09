@@ -19,12 +19,23 @@ export default function Home() {
     queryFn: () => apiJson<Category[]>("/api/categories"),
   });
 
+  const { data: banners = [] } = useQuery<Banner[]>({
+    queryKey: ["banners"],
+    queryFn: () => apiJson<Banner[]>("/api/banners"),
+    staleTime: 0,
+  });
+
   const featuredProducts = products.filter(p => p.isFeatured);
   const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
 
   return (
     <div className="flex flex-col gap-16 pb-16">
-      <Hero />
+      <Hero banners={banners} />
+      <div className="container mx-auto px-4">
+        <p className="text-xs text-muted-foreground bg-yellow-100 text-yellow-800 px-3 py-1 rounded font-mono inline-block" data-testid="debug-banners-count">
+          Banners loaded: {banners.length}
+        </p>
+      </div>
 
       {/* Categories */}
       <section className="container mx-auto px-4">

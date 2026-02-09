@@ -152,9 +152,9 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBanners(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(banners).orderBy(asc(banners.sortOrder));
+      return db.select().from(banners).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
     }
-    return db.select().from(banners).where(eq(banners.isActive, true)).orderBy(asc(banners.sortOrder));
+    return db.select().from(banners).where(eq(banners.isActive, true)).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
   }
 
   async getBannerById(id: number) {

@@ -75,14 +75,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/products", async (req: Request, res: Response) => {
     const { search, category } = req.query;
-    if (search && typeof search === "string") {
-      const results = await storage.searchProducts(search);
-      return res.json(results);
-    }
+    let categoryId: number | undefined;
     if (category && typeof category === "string") {
       const cat = await storage.getCategoryBySlug(category);
       if (!cat) return res.json([]);
-      const prods = await storage.getProductsByCategory(cat.id);
+      categoryId = cat.id;
+    }
+    if (search && typeof search === "string") {
+      const results = await storage.searchProducts(search, categoryId);
+      return res.json(results);
+    }
+    if (categoryId) {
+      const prods = await storage.getProductsByCategory(categoryId);
       return res.json(prods);
     }
     const prods = await storage.getAllProducts(false);

@@ -27,7 +27,7 @@ export interface IStorage {
   getProductById(id: number): Promise<Product | undefined>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
   getProductsByCategory(categoryId: number): Promise<Product[]>;
-  searchProducts(query: string): Promise<Product[]>;
+  searchProducts(query: string, categoryId?: number): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, data: Partial<InsertProduct>): Promise<Product | undefined>;
   getProductsByAdmin(adminId: string): Promise<Product[]>;
@@ -122,22 +122,25 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(products).where(and(eq(products.categoryId, categoryId), eq(products.isActive, true))).orderBy(desc(products.createdAt));
   }
 
-  async searchProducts(query: string) {
+  async searchProducts(query: string, categoryId?: number) {
     const searchTerm = `%${query}%`;
     const matchingCats = await db.select({ id: categories.id }).from(categories).where(ilike(categories.name, searchTerm));
     const catIds = matchingCats.map(c => c.id);
 
-    return db.select().from(products).where(
-      and(
-        eq(products.isActive, true),
-        or(
-          ilike(products.name, searchTerm),
-          ilike(products.partNumber, searchTerm),
-          ilike(products.description, searchTerm),
-          ...(catIds.length > 0 ? [sql`${products.categoryId} IN (${sql.join(catIds.map(id => sql`${id}`), sql`, `)})`] : [])
-        )
-      )
-    ).orderBy(desc(products.createdAt));
+    const conditions = [
+      eq(products.isActive, true),
+      or(
+        ilike(products.name, searchTerm),
+        ilike(products.partNumber, searchTerm),
+        ilike(products.description, searchTerm),
+        ...(catIds.length > 0 ? [sql`${products.categoryId} IN (${sql.join(catIds.map(id => sql`${id}`), sql`, `)})`] : [])
+      ),
+    ];
+    if (categoryId !== undefined) {
+      conditions.push(eq(products.categoryId, categoryId));
+    }
+
+    return db.select().from(products).where(and(...conditions)).orderBy(desc(products.createdAt));
   }
 
   async createProduct(product: InsertProduct) {

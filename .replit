@@ -46,6 +46,6 @@ mockupState = "FULLSTACK"
 [userenv]
 
 [userenv.shared]
-SUPER_ADMIN_EMAIL = "admin@monipack.com"
-ADMIN_ALLOWLIST = "admin@monipack.com"
+SUPER_ADMIN_EMAIL = "itshamnas@gmail.com"
+ADMIN_ALLOWLIST = "itshamnas@gmail.com"
 WHATSAPP_NUMBER = "1234567890"

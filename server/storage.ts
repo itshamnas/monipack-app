@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, asc, like, and, or, sql } from "drizzle-orm";
+import { eq, desc, asc, ilike, and, or, sql } from "drizzle-orm";
 import {
   admins, categories, products, banners, auditLogs,
   type Admin, type InsertAdmin,
@@ -124,13 +124,17 @@ export class DatabaseStorage implements IStorage {
 
   async searchProducts(query: string) {
     const searchTerm = `%${query}%`;
+    const matchingCats = await db.select({ id: categories.id }).from(categories).where(ilike(categories.name, searchTerm));
+    const catIds = matchingCats.map(c => c.id);
+
     return db.select().from(products).where(
       and(
         eq(products.isActive, true),
         or(
-          like(products.name, searchTerm),
-          like(products.partNumber, searchTerm),
-          like(products.description, searchTerm)
+          ilike(products.name, searchTerm),
+          ilike(products.partNumber, searchTerm),
+          ilike(products.description, searchTerm),
+          ...(catIds.length > 0 ? [sql`${products.categoryId} IN (${sql.join(catIds.map(id => sql`${id}`), sql`, `)})`] : [])
         )
       )
     ).orderBy(desc(products.createdAt));

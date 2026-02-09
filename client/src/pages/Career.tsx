@@ -33,7 +33,7 @@ export default function Career() {
       <div className="text-center mb-12">
         <h1 className="font-heading text-4xl font-bold mb-4">Career at Monipack</h1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Join our growing team and help us deliver top-quality packaging solutions across the region.
+          Join our growing team and help us deliver top-quality cleaning, food, and packaging solutions across the region.
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export default function Career() {
                     </div>
                   </div>
                   <Button asChild data-testid={`button-apply-${job.id}`}>
-                    <a href={`mailto:careers@monipack.com?subject=Application: ${job.title}`}>Apply Now</a>
+                    <a href={`mailto:connect@imshamnas.com?subject=Application: ${job.title}`}>Apply Now</a>
                   </Button>
                 </div>
               </CardContent>
@@ -77,7 +77,7 @@ export default function Career() {
               We're always looking for talented people. Send us your CV and we'll keep you in mind for future opportunities.
             </p>
             <Button asChild variant="outline" data-testid="button-general-apply">
-              <a href="mailto:careers@monipack.com?subject=General Application">Send Your CV</a>
+              <a href="mailto:connect@imshamnas.com?subject=General Application - CV Submission">Send Your CV</a>
             </Button>
           </CardContent>
         </Card>

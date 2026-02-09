@@ -10,7 +10,7 @@ export function Footer() {
             <img 
               src="/images/mni-logo.png" 
               alt="MNI Logo"
-              className="h-24 w-auto object-contain bg-transparent"
+              className="h-32 md:h-40 w-auto object-contain bg-transparent"
             />
             <p className="text-sm font-medium text-foreground/80 max-w-xs mt-3">
               MOROOJ NIZWA INTERNATIONAL LLC

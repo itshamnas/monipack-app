@@ -48,7 +48,8 @@ export default function Cart() {
     const footer = `\n---\nTotal: ${totalItems} items (${cart.length} products)\nSent from: ${origin}/cart\nDate: ${new Date().toLocaleString()}`;
     const message = `${header}\n\n${itemsList}\n${footer}`;
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodedMessage}`, '_blank');
+    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
+    window.open(`https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMessage}`, '_blank');
   };
 
   const handleDownloadPDF = async () => {
@@ -151,7 +152,8 @@ export default function Cart() {
 
     setTimeout(() => {
       const message = encodeURIComponent("Hi, please find my inquiry list attached as PDF.");
-      window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
+      const cleanNum = whatsappNumber.replace(/[^0-9]/g, '');
+      window.open(`https://api.whatsapp.com/send?phone=${cleanNum}&text=${message}`, '_blank');
       toast({ title: "Opening WhatsApp...", description: "Attach the downloaded PDF in the chat." });
     }, 1500);
   };

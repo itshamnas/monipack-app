@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiJson, apiFetch } from "@/lib/api";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminBanners() {
   const queryClient = useQueryClient();
@@ -121,11 +121,12 @@ export default function AdminBanners() {
               <div><Label>Subtitle</Label><Input value={form.subtitle} onChange={e => setForm(p => ({ ...p, subtitle: e.target.value }))} /></div>
               <div>
                 <Label>Image *</Label>
-                <div className="flex gap-2 items-center mt-1">
-                  {form.image && <img src={form.image} alt="" className="w-24 h-16 rounded object-cover border" />}
-                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload</Button>
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                <ImageUpload
+                  value={form.image ? [form.image] : []}
+                  onChange={(urls) => setForm((p) => ({ ...p, image: urls[0] || "" }))}
+                  maxFiles={1}
+                  className="mt-1"
+                />
               </div>
               <div><Label>Link URL</Label><Input value={form.linkUrl} onChange={e => setForm(p => ({ ...p, linkUrl: e.target.value }))} placeholder="/products" /></div>
               <div><Label>Sort Order</Label><Input type="number" value={form.sortOrder} onChange={e => setForm(p => ({ ...p, sortOrder: parseInt(e.target.value) || 0 }))} /></div>

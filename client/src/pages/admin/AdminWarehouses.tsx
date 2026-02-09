@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiJson, apiFetch } from "@/lib/api";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminWarehouses() {
   const queryClient = useQueryClient();
@@ -129,11 +129,12 @@ export default function AdminWarehouses() {
               <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required data-testid="input-warehouse-name" /></div>
               <div>
                 <Label>Image</Label>
-                <div className="flex gap-2 items-center mt-1">
-                  {form.image && <img src={form.image} alt="" className="w-24 h-16 rounded object-cover border" />}
-                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload</Button>
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                <ImageUpload
+                  value={form.image ? [form.image] : []}
+                  onChange={(urls) => setForm((p) => ({ ...p, image: urls[0] || "" }))}
+                  maxFiles={1}
+                  className="mt-1"
+                />
               </div>
               <div><Label>Google Maps URL</Label><Input value={form.mapUrl} onChange={e => setForm(p => ({ ...p, mapUrl: e.target.value }))} placeholder="https://maps.google.com/..." data-testid="input-warehouse-map" /></div>
               <div><Label>Phone Number</Label><Input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="+968 1234 5678" data-testid="input-warehouse-phone" /></div>

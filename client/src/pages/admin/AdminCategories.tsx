@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiJson, apiFetch } from "@/lib/api";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminCategories() {
   const queryClient = useQueryClient();
@@ -106,11 +106,12 @@ export default function AdminCategories() {
               <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} /></div>
               <div>
                 <Label>Image</Label>
-                <div className="flex gap-2 items-center mt-1">
-                  {form.image && <img src={form.image} alt="" className="w-16 h-16 rounded object-cover border" />}
-                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload Image</Button>
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                <ImageUpload
+                  value={form.image ? [form.image] : []}
+                  onChange={(urls) => setForm((p) => ({ ...p, image: urls[0] || "" }))}
+                  maxFiles={1}
+                  className="mt-1"
+                />
               </div>
               <div><Label>Sort Order</Label><Input type="number" value={form.sortOrder} onChange={e => setForm(p => ({ ...p, sortOrder: parseInt(e.target.value) || 0 }))} /></div>
               <div className="flex items-center gap-2"><Switch checked={form.isActive} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} /><Label>Active</Label></div>

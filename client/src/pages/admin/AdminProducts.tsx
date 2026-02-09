@@ -14,7 +14,7 @@ import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiJson, apiFetch } from "@/lib/api";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
@@ -23,7 +23,6 @@ export default function AdminProducts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [filter, setFilter] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "", partNumber: "", description: "", price: "", categoryId: "", images: [] as string[], isActive: true, isFeatured: false,
@@ -84,22 +83,6 @@ export default function AdminProducts() {
     setIsDialogOpen(true);
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const formData = new FormData();
-    Array.from(files).forEach(f => formData.append("images", f));
-    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
-    if (res.ok) {
-      const { urls } = await res.json();
-      setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }));
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (form.images.length < 3) {
@@ -147,21 +130,12 @@ export default function AdminProducts() {
               </div>
               <div>
                 <Label>Images (minimum 3) *</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {form.images.map((img, idx) => (
-                    <div key={idx} className="relative w-20 h-20 rounded border overflow-hidden group">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeImage(idx)} className="absolute top-0 right-0 bg-destructive text-white rounded-bl p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="w-20 h-20 rounded border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                    <Plus className="h-6 w-6" />
-                  </button>
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} />
-                {form.images.length < 3 && <p className="text-xs text-destructive mt-1">Need {3 - form.images.length} more image(s)</p>}
+                <ImageUpload
+                  value={form.images}
+                  onChange={(urls) => setForm((p) => ({ ...p, images: urls }))}
+                  minFiles={3}
+                  className="mt-2"
+                />
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2"><Switch checked={form.isActive} onCheckedChange={v => setForm(p => ({ ...p, isActive: v }))} /><Label>Active</Label></div>

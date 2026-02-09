@@ -42,3 +42,10 @@ waitForPort = 5000
 [agent]
 stack = "MOCKUP_JS"
 mockupState = "FULLSTACK"
+
+[userenv]
+
+[userenv.shared]
+SUPER_ADMIN_EMAIL = "admin@monipack.com"
+ADMIN_ALLOWLIST = "admin@monipack.com"
+WHATSAPP_NUMBER = "1234567890"

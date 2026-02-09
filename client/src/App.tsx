@@ -11,32 +11,37 @@ import Cart from "./pages/Cart";
 import NotFound from "./pages/not-found";
 import CategoryPage from "./pages/CategoryPage";
 import AdminLogin from "./pages/admin/Login";
+import VerifyOtp from "./pages/admin/VerifyOtp";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminBanners from "./pages/admin/AdminBanners";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 function Router() {
   return (
     <Switch>
-      {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/verify-otp" component={VerifyOtp} />
       <Route path="/admin" nest>
         <AdminLayout>
           <Switch>
             <Route path="/" component={AdminDashboard} />
             <Route path="/products" component={AdminProducts} />
-            {/* Fallback for admin routes */}
-             <Route component={AdminDashboard} />
+            <Route path="/categories" component={AdminCategories} />
+            <Route path="/banners" component={AdminBanners} />
+            <Route path="/admins" component={AdminUsers} />
+            <Route component={AdminDashboard} />
           </Switch>
         </AdminLayout>
       </Route>
 
-      {/* Public Routes */}
       <Route>
         <Layout>
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/products" component={ProductList} />
-            <Route path="/products/:id" component={ProductDetail} />
+            <Route path="/products/:slug" component={ProductDetail} />
             <Route path="/category/:slug" component={CategoryPage} />
             <Route path="/cart" component={Cart} />
             <Route component={NotFound} />

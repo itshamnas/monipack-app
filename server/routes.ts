@@ -294,7 +294,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/banners", requireSuperAdmin, async (req: Request, res: Response) => {
     const schema = z.object({
-      title: z.string().min(1),
+      title: z.string().optional(),
       subtitle: z.string().optional(),
       image: z.string().min(1),
       linkUrl: z.string().optional(),
@@ -307,6 +307,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     const banner = await storage.createBanner({
       ...parsed.data,
+      title: parsed.data.title || null,
       subtitle: parsed.data.subtitle || null,
       linkUrl: parsed.data.linkUrl || null,
       sortOrder: parsed.data.sortOrder ?? 0,

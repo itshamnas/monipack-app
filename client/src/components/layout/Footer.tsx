@@ -7,19 +7,17 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="bg-white rounded-xl p-4 inline-block shadow-sm border">
               <img 
                 src="/mni-logo.png" 
                 alt="MNI Logo"
-                className="h-12 w-auto"
+                className="h-20 md:h-24 w-auto object-contain"
               />
             </div>
-
-            <p className="text-sm text-muted-foreground max-w-xs mt-2">
-              MOROOJ NIZWA INTERNATIONAL LLC — Parent Company
+            <p className="text-sm font-medium text-foreground/80 max-w-xs">
+              MOROOJ NIZWA INTERNATIONAL LLC
             </p>
-
-
+            <p className="text-xs text-muted-foreground">Parent Company</p>
           </div>
           
           <div>

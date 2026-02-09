@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { eq, desc, asc, ilike, and, or, sql } from "drizzle-orm";
 import {
-  admins, categories, products, banners, auditLogs, retailOutlets, warehouses,
+  admins, categories, products, banners, auditLogs, retailOutlets, warehouses, contactMessages,
   type Admin, type InsertAdmin,
   type Category, type InsertCategory,
   type Product, type InsertProduct,
@@ -9,6 +9,7 @@ import {
   type AuditLog, type InsertAuditLog,
   type RetailOutlet, type InsertRetailOutlet,
   type Warehouse, type InsertWarehouse,
+  type ContactMessage, type InsertContactMessage,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -54,6 +55,12 @@ export interface IStorage {
 
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
+
+  createContactMessage(msg: InsertContactMessage): Promise<ContactMessage>;
+  getAllContactMessages(): Promise<ContactMessage[]>;
+  markContactMessageRead(id: number): Promise<void>;
+  deleteContactMessage(id: number): Promise<void>;
+  getUnreadContactCount(): Promise<number>;
 
   getAdminStats(adminId: string): Promise<{ totalProducts: number; activeProducts: number; disabledProducts: number; categoriesManaged: number }>;
   getGlobalStats(): Promise<{ totalProducts: number; activeProducts: number; totalCategories: number; activeCategories: number; totalAdmins: number }>;
@@ -275,6 +282,28 @@ export class DatabaseStorage implements IStorage {
       activeCategories: allCategories.filter(c => c.isActive).length,
       totalAdmins: allAdmins.length,
     };
+  }
+
+  async createContactMessage(msg: InsertContactMessage) {
+    const [created] = await db.insert(contactMessages).values(msg).returning();
+    return created;
+  }
+
+  async getAllContactMessages() {
+    return db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+  }
+
+  async markContactMessageRead(id: number) {
+    await db.update(contactMessages).set({ isRead: true }).where(eq(contactMessages.id, id));
+  }
+
+  async deleteContactMessage(id: number) {
+    await db.delete(contactMessages).where(eq(contactMessages.id, id));
+  }
+
+  async getUnreadContactCount() {
+    const unread = await db.select().from(contactMessages).where(eq(contactMessages.isRead, false));
+    return unread.length;
   }
 }
 

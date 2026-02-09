@@ -114,6 +114,20 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(whs);
   });
 
+  // Contact form submission (public)
+  app.post("/api/contact", async (req: Request, res: Response) => {
+    const { name, email, subject, message } = req.body;
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    try {
+      await storage.createContactMessage({ name, email, subject, message });
+      res.json({ success: true, message: "Message sent successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
   // ===== ADMIN API =====
 
   app.post("/api/admin/upload", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
@@ -644,6 +658,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/admin/audit-logs", requireSuperAdmin, async (req: Request, res: Response) => {
     const logs = await storage.getAuditLogs(100);
     res.json(logs);
+  });
+
+  // Contact messages (SUPER_ADMIN)
+  app.get("/api/admin/contact-messages", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const messages = await storage.getAllContactMessages();
+    res.json(messages);
+  });
+
+  app.get("/api/admin/contact-messages/unread-count", requireAuth, async (_req: Request, res: Response) => {
+    const count = await storage.getUnreadContactCount();
+    res.json({ count });
+  });
+
+  app.put("/api/admin/contact-messages/:id/read", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    await storage.markContactMessageRead(id);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/admin/contact-messages/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    await storage.deleteContactMessage(id);
+    res.json({ success: true });
   });
 
   return httpServer;

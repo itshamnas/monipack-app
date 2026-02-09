@@ -22,6 +22,7 @@ import AdminBanners from "./pages/admin/AdminBanners";
 import AdminRetailOutlets from "./pages/admin/AdminRetailOutlets";
 import AdminWarehouses from "./pages/admin/AdminWarehouses";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminMessages from "./pages/admin/AdminMessages";
 
 function Router() {
   return (
@@ -44,6 +45,9 @@ function Router() {
       </Route>
       <Route path="/admin/admin-users">
         <AdminLayout><AdminUsers /></AdminLayout>
+      </Route>
+      <Route path="/admin/messages">
+        <AdminLayout><AdminMessages /></AdminLayout>
       </Route>
       <Route path="/admin">
         <AdminLayout><AdminDashboard /></AdminLayout>

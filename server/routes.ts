@@ -7,6 +7,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcrypt";
+import { sendContactEmail } from "./email";
 
 function getIp(req: Request): string | null {
   const ip = req.ip;
@@ -122,6 +123,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
     try {
       await storage.createContactMessage({ name, email, subject, message });
+      try {
+        await sendContactEmail({ name, email, subject, message });
+      } catch (emailErr) {
+        console.error("Failed to send contact email:", emailErr);
+      }
       res.json({ success: true, message: "Message sent successfully" });
     } catch (err) {
       res.status(500).json({ message: "Failed to send message" });

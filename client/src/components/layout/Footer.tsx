@@ -22,6 +22,7 @@ export function Footer() {
               <li><Link href="/category/industrial-packaging" className="hover:text-primary transition-colors">Industrial Packaging</Link></li>
               <li><Link href="/category/food-containers" className="hover:text-primary transition-colors">Food Containers</Link></li>
               <li><Link href="/category/eco-friendly" className="hover:text-primary transition-colors">Eco-Friendly</Link></li>
+              <li><Link href="/admin/login" className="hover:text-primary transition-colors">Admin Login</Link></li>
             </ul>
           </div>
 

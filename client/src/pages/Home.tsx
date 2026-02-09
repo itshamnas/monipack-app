@@ -1,19 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Product, Category, Banner } from "@/lib/types";
-import { ProductCard } from "@/components/ui/ProductCard";
+import type { Category, Banner } from "@/lib/types";
 import { Hero } from "@/components/ui/Hero";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { apiJson } from "@/lib/api";
 
 export default function Home() {
-  const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
-    queryKey: ["products"],
-    queryFn: () => apiJson<Product[]>("/api/products"),
-  });
-
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: () => apiJson<Category[]>("/api/categories"),
@@ -25,38 +20,58 @@ export default function Home() {
     staleTime: 0,
   });
 
-  const featuredProducts = products.filter(p => p.isFeatured);
-  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
-
   return (
     <div className="flex flex-col gap-16 pb-16">
       <Hero banners={banners} />
 
-      {/* Categories */}
       <section className="container mx-auto px-4">
-        <h2 className="font-heading text-2xl md:text-3xl font-bold mb-8">Shop by Category</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="font-heading text-2xl md:text-3xl font-bold">Our Categories</h2>
+          <Link href="/products">
+            <Button variant="ghost" className="group">
+              All Products <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+        </div>
         {loadingCategories ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="aspect-[4/5] rounded-lg" />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
+            ))}
           </div>
         ) : categories.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories.map((cat) => (
-              <Link key={cat.id} href={`/category/${cat.slug}`}>
-                <div className="group relative overflow-hidden rounded-lg aspect-[4/5] cursor-pointer bg-muted">
+              <Card
+                key={cat.id}
+                className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-card/50"
+                data-testid={`card-category-${cat.id}`}
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                   {cat.image ? (
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100" />
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <span className="text-4xl text-primary/30 font-heading font-bold">{cat.name.charAt(0)}</span>
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
-                    <h3 className="text-white font-heading font-bold text-xl group-hover:translate-x-1 transition-transform">{cat.name}</h3>
-                    {cat.description && (
-                      <p className="text-white/80 text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{cat.description}</p>
-                    )}
-                  </div>
                 </div>
-              </Link>
+                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                  <h3 className="font-heading font-bold text-lg">{cat.name}</h3>
+                  {cat.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{cat.description}</p>
+                  )}
+                  <Link href={`/category/${cat.slug}`}>
+                    <Button variant="default" size="sm" className="mt-1 gap-1.5" data-testid={`button-view-category-${cat.id}`}>
+                      View Products <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
@@ -64,30 +79,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Products */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-heading text-2xl md:text-3xl font-bold">
-            {featuredProducts.length > 0 ? "Featured Products" : "Latest Products"}
-          </h2>
-          <Link href="/products">
-            <Button variant="ghost" className="group">View All <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></Button>
-          </Link>
-        </div>
-        {loadingProducts ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="aspect-square rounded-lg" />)}
-          </div>
-        ) : displayProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {displayProducts.map((product) => <ProductCard key={product.id} product={product} />)}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-12">No products yet. Add some in the admin panel.</p>
-        )}
-      </section>
-
-      {/* Value Props */}
       <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl my-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="p-4">

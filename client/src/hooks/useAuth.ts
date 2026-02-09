@@ -6,12 +6,12 @@ export function useAuth() {
 
   const { data: session, isLoading } = useQuery<AuthSession>({
     queryKey: ["auth-session"],
-    queryFn: () => fetch("/api/auth/session").then(r => r.json()),
+    queryFn: () => fetch("/api/auth/session", { credentials: "include" }).then(r => r.json()),
     staleTime: 60000,
   });
 
   const logoutMutation = useMutation({
-    mutationFn: () => fetch("/api/auth/logout", { method: "POST" }).then(r => r.json()),
+    mutationFn: () => fetch("/api/auth/logout", { method: "POST", credentials: "include" }).then(r => r.json()),
     onSuccess: () => {
       queryClient.setQueryData(["auth-session"], { authenticated: false });
       queryClient.invalidateQueries({ queryKey: ["auth-session"] });

@@ -6,18 +6,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AuditLog } from "@/lib/types";
+import { apiJson } from "@/lib/api";
 
 export default function AdminDashboard() {
   const { admin, isSuperAdmin } = useAuth();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-stats"],
-    queryFn: () => fetch("/api/admin/stats").then(r => r.json()),
+    queryFn: () => apiJson("/api/admin/stats"),
   });
 
   const { data: auditLogs = [] } = useQuery<AuditLog[]>({
     queryKey: ["admin-audit-logs"],
-    queryFn: () => fetch("/api/admin/audit-logs").then(r => r.json()),
+    queryFn: () => apiJson<AuditLog[]>("/api/admin/audit-logs"),
   });
 
   const globalStats = isSuperAdmin ? stats?.global : null;

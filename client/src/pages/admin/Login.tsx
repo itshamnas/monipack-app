@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { Loader2, Lock, Mail } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
+import { apiFetch } from "@/lib/api";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -16,7 +17,7 @@ export default function AdminLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, pin }: { email: string; pin: string }) => {
-      const res = await fetch("/api/auth/login", {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, pin }),

@@ -5,13 +5,14 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
+import { apiJson } from "@/lib/api";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
 
   const { data: config } = useQuery<{ whatsappNumber: string }>({
     queryKey: ["config"],
-    queryFn: () => fetch("/api/config").then(r => r.json()),
+    queryFn: () => apiJson<{ whatsappNumber: string }>("/api/config"),
   });
 
   const handleWhatsAppInquiry = () => {

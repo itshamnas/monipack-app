@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
@@ -21,12 +22,12 @@ export default function AdminUsers() {
 
   const { data: admins = [], isLoading } = useQuery<Admin[]>({
     queryKey: ["admin-users"],
-    queryFn: () => fetch("/api/admin/admins").then(r => r.json()),
+    queryFn: () => apiJson<Admin[]>("/api/admin/admins"),
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch("/api/admin/admins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const res = await apiFetch("/api/admin/admins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Create failed"); }
       return res.json();
     },
@@ -41,7 +42,7 @@ export default function AdminUsers() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await fetch(`/api/admin/admins/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
+      const res = await apiFetch(`/api/admin/admins/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
       if (!res.ok) throw new Error("Toggle failed");
       return res.json();
     },

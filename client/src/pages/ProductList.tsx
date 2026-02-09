@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson } from "@/lib/api";
 
 export default function ProductList() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -25,12 +26,12 @@ export default function ProductList() {
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["products", debouncedSearch, selectedCategory],
-    queryFn: () => fetch(`/api/products?${queryParams.toString()}`).then(r => r.json()),
+    queryFn: () => apiJson<Product[]>(`/api/products?${queryParams.toString()}`),
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/categories"),
   });
 
   return (

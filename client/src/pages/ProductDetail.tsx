@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson } from "@/lib/api";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -18,17 +19,17 @@ export default function ProductDetail() {
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["product", params.slug],
-    queryFn: () => fetch(`/api/products/${params.slug}`).then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); }),
+    queryFn: () => apiJson<Product>(`/api/products/${params.slug}`),
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/categories"),
   });
 
   const { data: allProducts = [] } = useQuery<Product[]>({
     queryKey: ["products"],
-    queryFn: () => fetch("/api/products").then(r => r.json()),
+    queryFn: () => apiJson<Product[]>("/api/products"),
     enabled: !!product,
   });
 

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminCategories() {
   const queryClient = useQueryClient();
@@ -25,14 +26,14 @@ export default function AdminCategories() {
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["admin-categories"],
-    queryFn: () => fetch("/api/admin/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/admin/categories"),
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const url = editingCategory ? `/api/admin/categories/${editingCategory.id}` : "/api/admin/categories";
       const method = editingCategory ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const res = await apiFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Save failed"); }
       return res.json();
     },
@@ -48,7 +49,7 @@ export default function AdminCategories() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
+      const res = await apiFetch(`/api/admin/categories/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
       if (!res.ok) throw new Error("Toggle failed");
       return res.json();
     },
@@ -74,7 +75,7 @@ export default function AdminCategories() {
     if (!files || files.length === 0) return;
     const formData = new FormData();
     formData.append("images", files[0]);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
     if (res.ok) {
       const { urls } = await res.json();
       setForm(prev => ({ ...prev, image: urls[0] }));

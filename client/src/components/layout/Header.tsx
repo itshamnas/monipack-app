@@ -11,6 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { apiJson } from "@/lib/api";
 
 export function Header() {
   const [location, setLocation] = useLocation();
@@ -20,7 +21,7 @@ export function Header() {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/categories"),
   });
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {

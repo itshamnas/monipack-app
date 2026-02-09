@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
 
 export default function VerifyOtp() {
   const [, setLocation] = useLocation();
@@ -14,7 +15,7 @@ export default function VerifyOtp() {
 
   const verifyMutation = useMutation({
     mutationFn: async (code: string) => {
-      const res = await fetch("/api/auth/verify-otp", {
+      const res = await apiFetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
@@ -34,7 +35,7 @@ export default function VerifyOtp() {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/auth/request-otp", { method: "POST" });
+      const res = await apiFetch("/api/auth/request-otp", { method: "POST" });
       if (!res.ok) throw new Error("Failed to resend");
       return res.json();
     },

@@ -14,6 +14,7 @@ import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminProducts() {
   const queryClient = useQueryClient();
@@ -30,19 +31,19 @@ export default function AdminProducts() {
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["admin-products"],
-    queryFn: () => fetch("/api/admin/products").then(r => r.json()),
+    queryFn: () => apiJson<Product[]>("/api/admin/products"),
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["admin-categories"],
-    queryFn: () => fetch("/api/admin/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/admin/categories"),
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const url = editingProduct ? `/api/admin/products/${editingProduct.id}` : "/api/admin/products";
       const method = editingProduct ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const res = await apiFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Save failed"); }
       return res.json();
     },
@@ -58,7 +59,7 @@ export default function AdminProducts() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await fetch(`/api/admin/products/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
+      const res = await apiFetch(`/api/admin/products/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
       if (!res.ok) throw new Error("Toggle failed");
       return res.json();
     },
@@ -88,7 +89,7 @@ export default function AdminProducts() {
     if (!files) return;
     const formData = new FormData();
     Array.from(files).forEach(f => formData.append("images", f));
-    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
     if (res.ok) {
       const { urls } = await res.json();
       setForm(prev => ({ ...prev, images: [...prev.images, ...urls] }));

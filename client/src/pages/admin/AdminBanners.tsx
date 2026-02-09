@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson, apiFetch } from "@/lib/api";
 
 export default function AdminBanners() {
   const queryClient = useQueryClient();
@@ -22,14 +23,14 @@ export default function AdminBanners() {
 
   const { data: banners = [], isLoading } = useQuery<Banner[]>({
     queryKey: ["admin-banners"],
-    queryFn: () => fetch("/api/admin/banners").then(r => r.json()),
+    queryFn: () => apiJson<Banner[]>("/api/admin/banners"),
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const url = editingBanner ? `/api/admin/banners/${editingBanner.id}` : "/api/admin/banners";
       const method = editingBanner ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+      const res = await apiFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Save failed"); }
       return res.json();
     },
@@ -45,7 +46,7 @@ export default function AdminBanners() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`/api/admin/banners/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/admin/banners/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       return res.json();
     },
@@ -72,7 +73,7 @@ export default function AdminBanners() {
     if (!files || files.length === 0) return;
     const formData = new FormData();
     formData.append("images", files[0]);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
     if (res.ok) {
       const { urls } = await res.json();
       setForm(prev => ({ ...prev, image: urls[0] }));

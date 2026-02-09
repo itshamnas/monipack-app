@@ -4,18 +4,19 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { useParams, Link } from "wouter";
 import { ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson } from "@/lib/api";
 
 export default function CategoryPage() {
   const params = useParams();
 
   const { data: category, isLoading: loadingCat } = useQuery<Category>({
     queryKey: ["category", params.slug],
-    queryFn: () => fetch(`/api/categories/${params.slug}`).then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); }),
+    queryFn: () => apiJson<Category>(`/api/categories/${params.slug}`),
   });
 
   const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
     queryKey: ["products", "category", params.slug],
-    queryFn: () => fetch(`/api/products?category=${params.slug}`).then(r => r.json()),
+    queryFn: () => apiJson<Product[]>(`/api/products?category=${params.slug}`),
     enabled: !!category,
   });
 

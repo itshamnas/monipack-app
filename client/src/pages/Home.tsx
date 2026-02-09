@@ -6,16 +6,17 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiJson } from "@/lib/api";
 
 export default function Home() {
   const { data: products = [], isLoading: loadingProducts } = useQuery<Product[]>({
     queryKey: ["products"],
-    queryFn: () => fetch("/api/products").then(r => r.json()),
+    queryFn: () => apiJson<Product[]>("/api/products"),
   });
 
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then(r => r.json()),
+    queryFn: () => apiJson<Category[]>("/api/categories"),
   });
 
   const featuredProducts = products.filter(p => p.isFeatured);

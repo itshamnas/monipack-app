@@ -19,7 +19,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    if (location !== "/admin/login" && location !== "/admin/verify-otp") {
+    if (location !== "/admin/login") {
       window.location.href = "/admin/login";
       return null;
     }

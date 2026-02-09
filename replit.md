@@ -41,8 +41,8 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - **ADMIN**: Can only manage their own products and categories
 
 ### Environment Variables
-- `SUPER_ADMIN_EMAIL` - Email for super admin (default: itshamnas@gmail.com)
-- `ADMIN_ALLOWLIST` - Comma-separated list of authorized admin emails (e.g. itshamnas@gmail.com)
+- `SUPER_ADMIN_EMAIL` - Admin login email (set by developer, e.g. itshamnas@gmail.com)
+- `ADMIN_PIN` - 6-digit PIN for admin login (set by developer, default: 123456)
 - `WHATSAPP_NUMBER` - WhatsApp number for inquiry messages
 - `SESSION_SECRET` - Express session secret (stored as secret)
 - `DATABASE_URL` - PostgreSQL connection string (auto-set)

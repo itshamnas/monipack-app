@@ -1,9 +1,6 @@
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
 import type { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
-import { randomInt, createHash } from "crypto";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 
@@ -26,26 +23,7 @@ export type AdminSession = {
 declare module "express-session" {
   interface SessionData {
     admin?: AdminSession;
-    pendingAdminId?: number;
   }
-}
-
-function hashOtp(code: string): string {
-  return createHash("sha256").update(code).digest("hex");
-}
-
-function generateOtp(): string {
-  return String(randomInt(100000, 999999));
-}
-
-function isAllowedEmail(email: string): boolean {
-  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase();
-  if (superAdminEmail && email.toLowerCase() === superAdminEmail) return true;
-
-  const allowlist = process.env.ADMIN_ALLOWLIST?.split(",").map(e => e.trim().toLowerCase()) || [];
-  if (allowlist.includes(email.toLowerCase())) return true;
-
-  return false;
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -66,7 +44,7 @@ export function setupAuth(app: Express) {
   app.use(
     session({
       store: new PgStore({ pool, createTableIfMissing: true }),
-      secret: process.env.NEXTAUTH_SECRET || process.env.SESSION_SECRET || "monipack-dev-secret-change-me",
+      secret: process.env.SESSION_SECRET || "monipack-dev-secret-change-me",
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -78,140 +56,37 @@ export function setupAuth(app: Express) {
     })
   );
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    const { email, pin } = req.body;
 
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: "/api/auth/google/callback",
-        },
-        async (_accessToken, _refreshToken, profile, done) => {
-          try {
-            const email = profile.emails?.[0]?.value;
-            if (!email) return done(null, false);
-
-            let admin = await storage.getAdminByEmail(email);
-            if (!admin) {
-              if (!isAllowedEmail(email)) {
-                return done(null, false);
-              }
-              const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase();
-              const role = superAdminEmail && email.toLowerCase() === superAdminEmail ? "SUPER_ADMIN" : "ADMIN";
-              admin = await storage.createAdmin({
-                email: email.toLowerCase(),
-                name: profile.displayName || email,
-                googleId: profile.id,
-                role,
-                isActive: true,
-              });
-            } else {
-              if (!admin.isActive) return done(null, false);
-              if (!admin.googleId) {
-                await storage.updateAdmin(admin.id, { googleId: profile.id });
-              }
-            }
-
-            done(null, admin);
-          } catch (err) {
-            done(err as Error);
-          }
-        }
-      )
-    );
-  }
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const admin = await storage.getAdminById(id);
-      done(null, admin);
-    } catch (err) {
-      done(err);
+    if (!email || !pin) {
+      return res.status(400).json({ message: "Email and PIN are required" });
     }
-  });
 
-  // Google OAuth routes
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+    const adminEmail = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
+    const adminPin = process.env.ADMIN_PIN || "123456";
 
-  app.get(
-    "/api/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/admin/login?error=unauthorized" }),
-    async (req: Request, res: Response) => {
-      const admin = req.user as any;
-      if (!admin) return res.redirect("/admin/login?error=unauthorized");
+    if (email.toLowerCase() !== adminEmail) {
+      return res.status(403).json({ message: "Invalid email or PIN" });
+    }
 
-      req.session.pendingAdminId = admin.id;
+    if (pin !== adminPin) {
+      return res.status(403).json({ message: "Invalid email or PIN" });
+    }
 
-      // Generate and "send" OTP
-      const otpCode = generateOtp();
-      const otpHash = hashOtp(otpCode);
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-      await storage.createOtp(admin.id, otpHash, expiresAt);
-
-      // Log the OTP to console for dev (in production, send email)
-      console.log(`[OTP] Code for ${admin.email}: ${otpCode}`);
-
-      await storage.createAuditLog({
-        adminId: admin.id,
-        action: "OTP_REQUESTED",
-        entity: "auth",
-        details: `OTP sent to ${admin.email}`,
-        ipAddress: getIp(req),
+    let admin = await storage.getAdminByEmail(email.toLowerCase());
+    if (!admin) {
+      admin = await storage.createAdmin({
+        email: email.toLowerCase(),
+        name: email.split("@")[0],
+        role: "SUPER_ADMIN",
+        isActive: true,
       });
-
-      res.redirect("/admin/verify-otp");
-    }
-  );
-
-  // Request OTP (for manual trigger)
-  app.post("/api/auth/request-otp", async (req: Request, res: Response) => {
-    const adminId = req.session.pendingAdminId;
-    if (!adminId) return res.status(400).json({ message: "No pending authentication" });
-
-    const admin = await storage.getAdminById(adminId);
-    if (!admin) return res.status(400).json({ message: "Admin not found" });
-
-    const otpCode = generateOtp();
-    const otpHash = hashOtp(otpCode);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await storage.createOtp(admin.id, otpHash, expiresAt);
-
-    console.log(`[OTP] Code for ${admin.email}: ${otpCode}`);
-
-    res.json({ message: "OTP sent to your email" });
-  });
-
-  // Verify OTP
-  app.post("/api/auth/verify-otp", async (req: Request, res: Response) => {
-    const adminId = req.session.pendingAdminId;
-    if (!adminId) return res.status(400).json({ message: "No pending authentication" });
-
-    const { code } = req.body;
-    if (!code || typeof code !== "string" || code.length !== 6) {
-      return res.status(400).json({ message: "Invalid OTP format" });
     }
 
-    const admin = await storage.getAdminById(adminId);
-    if (!admin) return res.status(400).json({ message: "Admin not found" });
-
-    const otp = await storage.getValidOtp(adminId);
-    if (!otp) return res.status(400).json({ message: "OTP expired or not found" });
-
-    const inputHash = hashOtp(code);
-    if (inputHash !== otp.codeHash) {
-      return res.status(400).json({ message: "Invalid OTP" });
+    if (!admin.isActive) {
+      return res.status(403).json({ message: "Account disabled" });
     }
-
-    await storage.markOtpUsed(otp.id);
 
     req.session.admin = {
       adminId: admin.id,
@@ -219,7 +94,6 @@ export function setupAuth(app: Express) {
       role: admin.role,
       otpVerified: true,
     };
-    delete req.session.pendingAdminId;
 
     await storage.createAuditLog({
       adminId: admin.id,
@@ -229,59 +103,19 @@ export function setupAuth(app: Express) {
       ipAddress: getIp(req),
     });
 
-    res.json({ message: "Authenticated", admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role } });
+    res.json({
+      message: "Authenticated",
+      admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role },
+    });
   });
 
-  // Dev login (no Google required)
-  app.post("/api/auth/dev-login", async (req: Request, res: Response) => {
-    if (process.env.NODE_ENV === "production") {
-      return res.status(403).json({ message: "Not available in production" });
-    }
-
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email required" });
-
-    let admin = await storage.getAdminByEmail(email);
-    if (!admin) {
-      if (!isAllowedEmail(email)) {
-        return res.status(403).json({ message: "Email not authorized" });
-      }
-      const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase();
-      const role = superAdminEmail && email.toLowerCase() === superAdminEmail ? "SUPER_ADMIN" : "ADMIN";
-      admin = await storage.createAdmin({
-        email: email.toLowerCase(),
-        name: email.split("@")[0],
-        role,
-        isActive: true,
-      });
-    }
-
-    if (!admin.isActive) return res.status(403).json({ message: "Account disabled" });
-
-    req.session.pendingAdminId = admin.id;
-
-    const otpCode = generateOtp();
-    const otpHash = hashOtp(otpCode);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await storage.createOtp(admin.id, otpHash, expiresAt);
-    console.log(`[OTP] Code for ${admin.email}: ${otpCode}`);
-
-    res.json({ message: "OTP sent", adminId: admin.id });
-  });
-
-  // Get current session
   app.get("/api/auth/session", (req: Request, res: Response) => {
     if (req.session.admin && req.session.admin.otpVerified) {
       return res.json({ authenticated: true, admin: req.session.admin });
     }
-    if (req.session.pendingAdminId) {
-      return res.json({ authenticated: false, pendingOtp: true });
-    }
     res.json({ authenticated: false });
   });
 
-  // Logout
   app.post("/api/auth/logout", async (req: Request, res: Response) => {
     if (req.session.admin) {
       await storage.createAuditLog({

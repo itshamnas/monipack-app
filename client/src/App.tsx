@@ -11,7 +11,6 @@ import Cart from "./pages/Cart";
 import NotFound from "./pages/not-found";
 import CategoryPage from "./pages/CategoryPage";
 import AdminLogin from "./pages/admin/Login";
-import VerifyOtp from "./pages/admin/VerifyOtp";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -22,7 +21,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/verify-otp" component={VerifyOtp} />
       <Route path="/admin" nest>
         <AdminLayout>
           <Switch>

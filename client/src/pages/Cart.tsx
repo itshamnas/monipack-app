@@ -90,19 +90,11 @@ export default function Cart() {
 
     await addLogoToDoc();
 
-    doc.setDrawColor(0, 51, 102);
-    doc.setLineWidth(1);
-    doc.line(14, 8, pageWidth - 14, 8);
-
     doc.setFontSize(9);
     doc.setTextColor(100);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 14, 15, { align: "right" });
     doc.text(`Time: ${new Date().toLocaleTimeString()}`, pageWidth - 14, 20, { align: "right" });
     doc.setTextColor(0);
-
-    doc.setDrawColor(200, 30, 60);
-    doc.setLineWidth(0.5);
-    doc.line(14, 28, pageWidth - 14, 28);
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");

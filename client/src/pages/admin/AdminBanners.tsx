@@ -44,6 +44,24 @@ export default function AdminBanners() {
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      const res = await apiFetch(`/api/admin/banners/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || err.message || "Toggle failed"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+      queryClient.invalidateQueries({ queryKey: ["banners"] });
+      toast({ title: "Banner updated" });
+    },
+    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiFetch(`/api/admin/banners/${id}`, { method: "DELETE" });
@@ -130,7 +148,7 @@ export default function AdminBanners() {
               </div>
               <CardContent className="p-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Switch checked={banner.isActive} onCheckedChange={(checked) => saveMutation.mutate({ ...banner, isActive: checked })} />
+                  <Switch checked={banner.isActive} onCheckedChange={(checked) => toggleMutation.mutate({ id: banner.id, isActive: checked })} />
                   <span className="text-sm text-muted-foreground">{banner.isActive ? "Active" : "Inactive"}</span>
                 </div>
                 <div className="flex gap-2">

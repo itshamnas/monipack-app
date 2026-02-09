@@ -323,8 +323,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       isActive: z.boolean().optional(),
     });
 
+    console.log("[DEBUG] Banner PATCH body:", JSON.stringify(req.body));
     const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid input" });
+    if (!parsed.success) {
+      const flat = parsed.error.flatten();
+      console.log("[DEBUG] Banner PATCH validation error:", JSON.stringify(flat));
+      return res.status(400).json({ error: "Invalid input", fieldErrors: flat.fieldErrors, formErrors: flat.formErrors });
+    }
 
     const updated = await storage.updateBanner(id, parsed.data);
 

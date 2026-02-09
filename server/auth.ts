@@ -63,29 +63,31 @@ export function setupAuth(app: Express) {
       return res.status(400).json({ message: "Email and PIN are required" });
     }
 
-    const adminEmail = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
     const adminPin = process.env.ADMIN_PIN || "123456";
-
-    if (email.toLowerCase() !== adminEmail) {
-      return res.status(403).json({ message: "Invalid email or PIN" });
-    }
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || "").toLowerCase();
+    const normalizedEmail = email.toLowerCase();
 
     if (pin !== adminPin) {
       return res.status(403).json({ message: "Invalid email or PIN" });
     }
 
-    let admin = await storage.getAdminByEmail(email.toLowerCase());
-    if (!admin) {
+    let admin = await storage.getAdminByEmail(normalizedEmail);
+
+    if (!admin && normalizedEmail === superAdminEmail) {
       admin = await storage.createAdmin({
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         name: email.split("@")[0],
         role: "SUPER_ADMIN",
         isActive: true,
       });
     }
 
+    if (!admin) {
+      return res.status(403).json({ message: "Invalid email or PIN" });
+    }
+
     if (!admin.isActive) {
-      return res.status(403).json({ message: "Account disabled" });
+      return res.status(403).json({ message: "Account disabled. Contact a Super Admin." });
     }
 
     req.session.admin = {

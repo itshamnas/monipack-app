@@ -20,7 +20,7 @@ export default function AdminUsers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState({ email: "", name: "", role: "ADMIN" as "ADMIN" | "SUPER_ADMIN" });
 
-  const { data: admins = [], isLoading } = useQuery<Admin[]>({
+  const { data: admins = [], isLoading, isError, error } = useQuery<Admin[]>({
     queryKey: ["admin-users"],
     queryFn: () => apiJson<Admin[]>("/api/admin/admins"),
   });
@@ -70,7 +70,10 @@ export default function AdminUsers() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+              {createMutation.isError && (
+                <p className="text-sm text-destructive" data-testid="text-create-error">{(createMutation.error as Error)?.message || "Create failed"}</p>
+              )}
+              <Button type="submit" className="w-full" disabled={createMutation.isPending} data-testid="button-create-admin">
                 {createMutation.isPending ? "Creating..." : "Create Admin"}
               </Button>
             </form>
@@ -78,7 +81,12 @@ export default function AdminUsers() {
         </Dialog>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-center" data-testid="text-error-list">
+          <p className="text-destructive font-medium">Failed to load admin users</p>
+          <p className="text-sm text-muted-foreground mt-1">{(error as Error)?.message || "Unknown error"}</p>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16" />)}</div>
       ) : (
         <div className="rounded-md border bg-card">

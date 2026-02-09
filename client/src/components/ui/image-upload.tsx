@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { X, Upload, Loader2, Crop, Check } from "lucide-react";
+import { X, Upload, Loader2, Check, RotateCw, FlipHorizontal, FlipVertical, RotateCcw, ZoomIn, Undo2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -28,34 +28,58 @@ function createImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: Area,
+  rotation: number,
+  flipH: boolean,
+  flipV: boolean
+): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  const maxSize = Math.max(image.width, image.height);
+  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+  canvas.width = safeArea;
+  canvas.height = safeArea;
+
+  ctx.translate(safeArea / 2, safeArea / 2);
+  ctx.rotate((rotation * Math.PI) / 180);
+  ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  ctx.translate(-safeArea / 2, -safeArea / 2);
 
   ctx.drawImage(
     image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
+    safeArea / 2 - image.width * 0.5,
+    safeArea / 2 - image.height * 0.5
+  );
+
+  const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+
+  ctx.putImageData(
+    data,
+    Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
+    Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
   );
 
   return new Promise((resolve) => {
-    canvas.toBlob(
-      (blob) => resolve(blob!),
-      "image/jpeg",
-      0.95
-    );
+    canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.95);
   });
 }
+
+const ASPECT_PRESETS = [
+  { label: "Free", value: undefined },
+  { label: "1:1", value: 1 },
+  { label: "4:3", value: 4 / 3 },
+  { label: "3:4", value: 3 / 4 },
+  { label: "16:9", value: 16 / 9 },
+  { label: "9:16", value: 9 / 16 },
+] as const;
 
 interface CropDialogProps {
   open: boolean;
@@ -69,6 +93,10 @@ interface CropDialogProps {
 function CropDialog({ open, imageSrc, fileName, onClose, onCropComplete, onSkip }: CropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
+  const [aspect, setAspect] = useState<number | undefined>(undefined);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const handleCropComplete = useCallback((_: Area, croppedPixels: Area) => {
@@ -77,47 +105,154 @@ function CropDialog({ open, imageSrc, fileName, onClose, onCropComplete, onSkip 
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
-    const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+    const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, flipH, flipV);
     onCropComplete(croppedBlob);
+  };
+
+  const handleReset = () => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setFlipH(false);
+    setFlipV(false);
+    setAspect(undefined);
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle className="text-base">Crop Image: {fileName}</DialogTitle>
+      <DialogContent className="max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 overflow-hidden gap-0">
+        <DialogHeader className="px-4 pt-4 pb-2">
+          <DialogTitle className="text-base font-semibold">{fileName}</DialogTitle>
         </DialogHeader>
-        <div className="relative w-full h-[350px] sm:h-[400px] bg-black">
+
+        <div className="relative w-full h-[300px] sm:h-[380px] md:h-[420px] bg-neutral-950">
           <Cropper
             image={imageSrc}
             crop={crop}
             zoom={zoom}
-            aspect={undefined}
+            rotation={rotation}
+            aspect={aspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
+            onRotationChange={setRotation}
             onCropComplete={handleCropComplete}
             showGrid
+            zoomSpeed={0.3}
+            maxZoom={5}
+            objectFit="contain"
+            style={{
+              containerStyle: { borderRadius: 0 },
+              mediaStyle: {
+                transform: `scale(${flipH ? -1 : 1}, ${flipV ? -1 : 1})`,
+              },
+            }}
           />
         </div>
-        <div className="px-4 py-3 space-y-3">
+
+        <div className="px-4 py-3 space-y-3 bg-card border-t">
+          <div className="flex flex-wrap gap-1.5">
+            {ASPECT_PRESETS.map((preset) => (
+              <Button
+                key={preset.label}
+                type="button"
+                variant={aspect === preset.value ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs px-2.5"
+                onClick={() => setAspect(preset.value)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Zoom</span>
+            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
             <Slider
               value={[zoom]}
               min={1}
-              max={3}
-              step={0.1}
+              max={5}
+              step={0.05}
               onValueChange={(val) => setZoom(val[0])}
               className="flex-1"
             />
+            <span className="text-xs text-muted-foreground w-10 text-right">{zoom.toFixed(1)}x</span>
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" size="sm" onClick={onSkip}>
-              Skip Crop
-            </Button>
-            <Button size="sm" onClick={handleSave} className="gap-1">
-              <Check className="h-4 w-4" /> Apply Crop
-            </Button>
+
+          <div className="flex items-center gap-3">
+            <RotateCw className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Slider
+              value={[rotation]}
+              min={0}
+              max={360}
+              step={1}
+              onValueChange={(val) => setRotation(val[0])}
+              className="flex-1"
+            />
+            <span className="text-xs text-muted-foreground w-10 text-right">{rotation}°</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+                title="Rotate 90° right"
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
+                title="Rotate 90° left"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant={flipH ? "default" : "outline"}
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setFlipH(!flipH)}
+                title="Flip horizontal"
+              >
+                <FlipHorizontal className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant={flipV ? "default" : "outline"}
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setFlipV(!flipV)}
+                title="Flip vertical"
+              >
+                <FlipVertical className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={handleReset}
+                title="Reset all"
+              >
+                <Undo2 className="h-3.5 w-3.5 mr-1" /> Reset
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={onSkip}>
+                Skip
+              </Button>
+              <Button size="sm" onClick={handleSave} className="gap-1.5">
+                <Check className="h-4 w-4" /> Apply
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -254,20 +389,24 @@ export function ImageUpload({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         {value.map((url, index) => (
           <div
             key={url + index}
-            className="relative w-24 h-24 rounded-lg border overflow-hidden group shadow-sm"
+            className="relative w-24 h-24 rounded-lg border overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
           >
             <img src={url} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
             <button
               type="button"
               onClick={() => removeImage(index)}
-              className="absolute top-1 right-1 bg-destructive/90 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+              className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow"
             >
               <X className="h-3 w-3" />
             </button>
+            <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {index + 1}
+            </span>
           </div>
         ))}
 
@@ -305,7 +444,7 @@ export function ImageUpload({
 
       {!isDragActive && !isUploading && value.length < maxFiles && (
         <p className="text-[11px] text-muted-foreground italic">
-          Tip: Drag & drop images here. You can crop each image before uploading.
+          Drag & drop images here. Crop, rotate, flip before uploading.
         </p>
       )}
 
@@ -313,7 +452,7 @@ export function ImageUpload({
         <CropDialog
           open={true}
           imageSrc={currentCropItem.dataUrl}
-          fileName={`Image ${currentCropIndex + 1} of ${cropQueue.length}`}
+          fileName={`Crop Image ${currentCropIndex + 1} of ${cropQueue.length}`}
           onClose={handleCropClose}
           onCropComplete={handleCropDone}
           onSkip={handleSkipCrop}

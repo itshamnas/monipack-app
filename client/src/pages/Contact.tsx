@@ -86,7 +86,7 @@ export default function Contact() {
                   <p className="font-medium">Head Office</p>
                   <p className="text-muted-foreground">Bin Hayl-1, Al Maardih St, Ghala, Muscat, Floor 5, Room No. 53, 130</p>
                   <a
-                    href="https://maps.app.goo.gl/cp5qwlXzbWkV9PnKI"
+                    href="https://maps.app.goo.gl/CBJDLsAAMEpxNRFz7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1 text-sm font-medium mt-1"

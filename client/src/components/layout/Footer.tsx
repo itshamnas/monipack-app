@@ -6,16 +6,16 @@ export function Footer() {
     <footer className="bg-secondary/50 border-t mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
+          <div>
             <img 
-              src="/mni-logo.png" 
+              src="/images/mni-logo.png" 
               alt="MNI Logo"
-              className="h-52 md:h-64 w-auto object-contain"
+              className="h-24 w-auto object-contain bg-transparent"
             />
-            <p className="text-sm font-medium text-foreground/80 max-w-xs">
+            <p className="text-sm font-medium text-foreground/80 max-w-xs mt-3">
               MOROOJ NIZWA INTERNATIONAL LLC
             </p>
-            <p className="text-xs text-muted-foreground">Parent Company</p>
+            <p className="text-xs text-muted-foreground mt-1">Parent Company</p>
           </div>
           
           <div>

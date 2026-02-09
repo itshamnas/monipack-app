@@ -32,13 +32,16 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
       </div>
-      <CardContent className="p-4 flex-1">
+      <CardContent className="p-4 flex-1 flex flex-col">
         <div className="text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wider">{product.partNumber}</div>
         <Link href={`/products/${product.slug}`} className="hover:underline decoration-primary underline-offset-4">
-          <h3 className="font-heading font-semibold text-lg leading-tight line-clamp-2 mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
+          <h3 className="font-heading font-semibold text-lg leading-tight line-clamp-2 mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
         </Link>
+        {product.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{product.description}</p>
+        )}
         {product.price && (
-          <div className="font-medium text-lg text-primary">${parseFloat(product.price).toFixed(2)}</div>
+          <div className="font-medium text-lg text-primary mt-auto">${parseFloat(product.price).toFixed(2)}</div>
         )}
       </CardContent>
     </Card>

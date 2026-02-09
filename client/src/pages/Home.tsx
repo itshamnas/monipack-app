@@ -31,11 +31,6 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-16 pb-16">
       <Hero banners={banners} />
-      <div className="container mx-auto px-4">
-        <p className="text-xs text-muted-foreground bg-yellow-100 text-yellow-800 px-3 py-1 rounded font-mono inline-block" data-testid="debug-banners-count">
-          Banners loaded: {banners.length}
-        </p>
-      </div>
 
       {/* Categories */}
       <section className="container mx-auto px-4">

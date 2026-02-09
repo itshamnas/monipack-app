@@ -11,16 +11,21 @@ export function Header() {
   const { cartCount } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isActive = (path: string) => location === path;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-6 w-6" /></Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4 mt-8">
+              <div className="mt-4 mb-8">
+                <img src="/images/monipack-logo.png" alt="monipack" className="h-12 object-contain" />
+              </div>
+              <nav className="flex flex-col gap-4">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Home</Link>
                 <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Products</Link>
                 <Link href="/retail-outlets" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Retail Outlets</Link>
@@ -30,16 +35,18 @@ export function Header() {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link href="/"><img src="/images/monipack-logo.png" alt="monipack" className="h-10 object-contain" /></Link>
+          <Link href="/" className="flex items-center">
+            <img src="/images/monipack-logo.png" alt="monipack" className="h-14 w-auto object-contain" />
+          </Link>
         </div>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link>
-          <Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">Products</Link>
-          <Link href="/retail-outlets" className="text-muted-foreground hover:text-primary transition-colors">Retail Outlets</Link>
-          <Link href="/warehouses" className="text-muted-foreground hover:text-primary transition-colors">Warehouses</Link>
-          <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact Us</Link>
-          <Link href="/career" className="text-muted-foreground hover:text-primary transition-colors">Career</Link>
+          <Link href="/" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/") ? "text-primary" : "text-muted-foreground"}`}>Home</Link>
+          <Link href="/products" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/products") ? "text-primary" : "text-muted-foreground"}`}>Products</Link>
+          <Link href="/retail-outlets" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/retail-outlets") ? "text-primary" : "text-muted-foreground"}`}>Retail Outlets</Link>
+          <Link href="/warehouses" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/warehouses") ? "text-primary" : "text-muted-foreground"}`}>Warehouses</Link>
+          <Link href="/contact" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/contact") ? "text-primary" : "text-muted-foreground"}`}>Contact Us</Link>
+          <Link href="/career" className={`text-sm font-medium transition-colors hover:text-primary ${isActive("/career") ? "text-primary" : "text-muted-foreground"}`}>Career</Link>
         </nav>
 
         <div className="flex items-center gap-2">

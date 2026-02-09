@@ -15,7 +15,7 @@ export async function sendContactEmail(data: {
 
   await resend.emails.send({
     from: 'MoniPack Contact <onboarding@resend.dev>',
-    to: 'info@monipack.com',
+    to: 'connect@imshamnas.com',
     subject: `Contact Form: ${data.subject}`,
     replyTo: data.email,
     html: `

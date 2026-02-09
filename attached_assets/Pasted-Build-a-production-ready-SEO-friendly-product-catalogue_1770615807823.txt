@@ -1,0 +1,109 @@
+Build a production-ready SEO-friendly product catalogue web app (PWA style so it feels like an app on mobile) for brand: "monipack" (IMPORTANT: the “m” must always be lowercase everywhere).
+
+Tech stack:
+- Next.js (App Router) + TypeScript
+- Tailwind CSS
+- PostgreSQL (use environment variables for DB URL)
+- Drizzle ORM (or Prisma if easier) + migrations
+- Auth: Google OAuth + email OTP (6-digit pin) as second step
+- Roles: SUPER_ADMIN (developer), ADMIN
+- SEO: server-rendered pages, dynamic sitemap.xml, robots.txt, meta tags, OpenGraph, fast performance
+
+Brand UI:
+- Main brand color: Rich Red (create a theme token and use consistently)
+- Modern clean interface, best UX on mobile and desktop
+- Header with logo, navigation, search, categories dropdown
+- Homepage: hero banner + carousel (developer-only editable), category tiles, featured products
+- Footer: business legal name, support email, social links/icons (Instagram, LinkedIn, Facebook, WhatsApp channel, X)
+- Font placeholder: provide instructions to add my custom font later via /public/fonts and Tailwind config. Until then use a clean default font.
+
+Front-end (public users):
+- Products show: images (minimum 3 images per product), product name, part number, descriptions, category tags, optional price
+- Category pages (SEO-friendly URLs)
+- Search + filters (category, availability)
+- No checkout.
+- Cart exists ONLY to collect multiple products, then user taps “Send Inquiry on WhatsApp”.
+- Cart supports quantity per item.
+- IMPORTANT: Remove user-entered contact name and phone number fields completely. Do not collect or store customer phone/name.
+- WhatsApp message must include:
+  - First line: "Please share your name, phone number, and delivery location."
+  - Then list of products with name + part number + quantity
+  - Source info: timestamp and page URL
+- WhatsApp integration: open wa.me link using WHATSAPP_NUMBER env var, prefilled message.
+
+Back-end / Admin panel:
+- Route group /admin protected.
+- Login flow:
+  1) Google sign-in (only allow emails listed in admins table OR ADMIN_ALLOWLIST env)
+  2) After Google login, require 6-digit OTP sent to that email (valid for 10 minutes, one-time use).
+- Each admin has unique credentials and cannot access other admin accounts.
+- SUPER_ADMIN (developer) can access everything.
+
+Permissions (STRICT):
+- SUPER_ADMIN (developer) ONLY:
+  - Manage carousel/banners (create/edit/reorder/enable-disable)
+  - Manage admin users (create/disable, set role)
+  - View and edit all products and categories
+  - View audit logs and per-admin performance
+- ADMIN users:
+  - Products: create/edit/toggle ON/OFF products, upload images
+  - Categories: create/edit/reorder/enable-disable categories
+  - Cannot access carousel/banners
+  - Can only see their own dashboard stats/performance
+  - Product access rule: ADMIN can edit ONLY products they created (createdBy matches their admin id). SUPER_ADMIN can edit all.
+
+Admin product upload rules:
+- Required fields: product name, part number, description, category, minimum 3 images
+- Optional: price
+- Instantly publish: any product uploaded/edited by admin and set ON must appear immediately on the public site.
+- Any product can be turned OFF/ON (ADMIN only for their own products; SUPER_ADMIN for all).
+
+Category rules:
+- Fields: name, slug (auto-generated + editable), sort order, status ON/OFF
+- Slug must be unique, SEO-friendly
+- Reordering supported
+- If category is OFF, hide it from public navigation and category pages.
+
+Admin dashboard:
+- ADMIN dashboard shows their progress:
+  - total products created
+  - active products
+  - disabled products
+  - categories created/managed
+- SUPER_ADMIN dashboard shows global stats + per-admin stats
+
+Data + auditing:
+- Store createdBy admin id for products and categories
+- Audit logs for: login events, OTP requests, product create/update/toggle, category create/update/reorder/toggle, banner changes (super only)
+
+Security + quality:
+- Server-side authorization checks for every admin action (API + pages)
+- Validate inputs (zod)
+- Rate limit OTP requests
+- Store OTP hashed (never plain)
+- Use secure cookies/session
+- Image uploads:
+  - Must enforce minimum 3 images per product.
+  - Use a Replit-friendly storage approach. If local storage is used, clearly document persistence limits and provide an upgrade path (S3/R2/Supabase Storage).
+- High performance, responsive, accessible UI.
+
+Deliverables in the code:
+- Database schema + migrations
+- Public pages: /, /products, /products/[slug], /category/[slug]
+- Admin pages: /admin, /admin/products, /admin/categories, /admin/banners (super only), /admin/admins (super only)
+- API routes for all CRUD with role checks
+- README with setup steps, env vars, run commands, and deploy steps, plus how to add custom font later.
+
+Environment variables required:
+- DATABASE_URL
+- GOOGLE_CLIENT_ID
+- GOOGLE_CLIENT_SECRET
+- NEXTAUTH_SECRET (or equivalent)
+- OTP_EMAIL_PROVIDER_API_KEY (Resend or similar) and FROM_EMAIL
+- WHATSAPP_NUMBER (international format, no +)
+- SUPER_ADMIN_EMAIL
+- Optional: ADMIN_ALLOWLIST (comma-separated emails)
+
+Important naming rules:
+- Always display brand name as "monipack"
+- Do not capitalize the “m” anywhere.

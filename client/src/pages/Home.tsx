@@ -376,27 +376,28 @@ export default function Home() {
       </section>
 
       <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
-        <DialogContent className="max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden bg-white border-none shadow-2xl">
+        <DialogContent className="max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden bg-white border-none shadow-2xl [&>button]:hidden">
           <div className="relative flex items-center justify-center p-8 md:p-12 min-h-[300px] md:min-h-[400px]">
             <button
               onClick={() => setLightboxImage(null)}
-              className="absolute top-3 right-3 z-10 bg-black/10 hover:bg-black/20 rounded-full p-2 transition-colors"
+              className="absolute top-4 right-4 z-[60] bg-white/90 hover:bg-white rounded-full p-2.5 shadow-xl transition-all duration-200 group/close border border-gray-100 hover:scale-110 active:scale-95"
+              aria-label="Close"
               data-testid="lightbox-close"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className="h-6 w-6 text-gray-900" strokeWidth={2.5} />
             </button>
             {lightboxImage && (
               <img
                 src={lightboxImage.src}
                 alt={lightboxImage.alt}
-                className="max-w-full max-h-[60vh] object-contain"
+                className="max-w-full max-h-[60vh] object-contain select-none"
                 data-testid="lightbox-image"
               />
             )}
           </div>
           {lightboxImage && (
-            <div className="text-center pb-6 px-4">
-              <p className="font-heading font-bold text-xl text-foreground">{lightboxImage.alt}</p>
+            <div className="text-center pb-8 px-4">
+              <p className="font-heading font-bold text-2xl text-foreground tracking-tight">{lightboxImage.alt}</p>
             </div>
           )}
         </DialogContent>

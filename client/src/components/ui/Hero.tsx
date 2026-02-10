@@ -6,28 +6,32 @@ import type { Banner } from "@/lib/types";
 
 function StaticHero() {
   return (
-    <section className="relative overflow-hidden bg-muted/30">
-      <div className="container mx-auto px-4 py-20 md:py-32 flex flex-col items-center text-center relative z-10">
-        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-transparent bg-primary/10 text-primary mb-6">
-          Premium Packaging Solutions
+    <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="absolute inset-0 bg-[url('/images/monipack-logo.png')] bg-center bg-no-repeat bg-contain opacity-[0.03]" />
+      <div className="container mx-auto px-4 py-24 md:py-36 flex flex-col items-center text-center relative z-10">
+        <div className="inline-flex items-center rounded-full border border-white/20 px-4 py-1.5 text-xs font-semibold text-white/90 mb-8 backdrop-blur-sm bg-white/5">
+          Cleaning · Food · Packaging Solutions
         </div>
-        <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6 max-w-4xl text-brand-gradient">
-          Quality Packaging for Modern Brands
+        <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl text-white">
+          Your Trusted Partner for{" "}
+          <span className="text-primary">Quality Products</span>
         </h1>
-        <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
-          Secure, sustainable, and stylish packaging solutions tailored for your business needs.
-          From industrial shipping to retail display.
+        <p className="text-white/70 text-lg md:text-xl max-w-2xl mb-10 leading-relaxed">
+          From cleaning essentials to food products and packaging solutions — Monipack delivers quality you can count on, all across Oman.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Link href="/products">
-            <Button size="lg" className="h-12 px-8 text-base">
-              Browse Catalogue <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" className="h-12 px-8 text-base gap-2">
+              Browse Catalogue <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/contact">
+            <Button size="lg" variant="outline" className="h-12 px-8 text-base gap-2 border-white/30 text-white hover:bg-white/10">
+              Get in Touch
             </Button>
           </Link>
         </div>
       </div>
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }

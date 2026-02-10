@@ -8,6 +8,9 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcrypt";
 import { sendContactEmail } from "./email";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
+import { products, categories, banners, retailOutlets, warehouses, contactMessages } from "@shared/schema";
 
 function getIp(req: Request): string | null {
   const ip = req.ip;
@@ -379,7 +382,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/admin/banners/:id", requireSuperAdmin, async (req: Request, res: Response) => {
     const id = parseInt(param(req.params.id));
-    await storage.deleteBanner(id);
+    await storage.softDeleteBanner(id);
     await storage.createAuditLog({
       actorAdminId: req.session.admin!.adminId,
       action: "BANNER_DELETED",
@@ -452,7 +455,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/admin/retail-outlets/:id", requireSuperAdmin, async (req: Request, res: Response) => {
     const id = parseInt(param(req.params.id));
-    await storage.deleteRetailOutlet(id);
+    await storage.softDeleteRetailOutlet(id);
     await storage.createAuditLog({
       actorAdminId: req.session.admin!.adminId,
       action: "RETAIL_OUTLET_DELETED",
@@ -525,7 +528,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/admin/warehouses/:id", requireSuperAdmin, async (req: Request, res: Response) => {
     const id = parseInt(param(req.params.id));
-    await storage.deleteWarehouse(id);
+    await storage.softDeleteWarehouse(id);
     await storage.createAuditLog({
       actorAdminId: req.session.admin!.adminId,
       action: "WAREHOUSE_DELETED",
@@ -724,8 +727,76 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/admin/contact-messages/:id", requireSuperAdmin, async (req: Request, res: Response) => {
     const id = parseInt(param(req.params.id));
-    await storage.deleteContactMessage(id);
+    await storage.softDeleteContactMessage(id);
     res.json({ success: true });
+  });
+
+  // ===== DELETED ITEMS (SUPER_ADMIN only) =====
+  app.get("/api/admin/deleted", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const [delProducts, delCategories, delBanners, delOutlets, delWarehouses, delMessages] = await Promise.all([
+      db.select().from(products).where(eq(products.isDeleted, true)).orderBy(desc(products.deletedAt)),
+      db.select().from(categories).where(eq(categories.isDeleted, true)).orderBy(desc(categories.deletedAt)),
+      db.select().from(banners).where(eq(banners.isDeleted, true)).orderBy(desc(banners.deletedAt)),
+      db.select().from(retailOutlets).where(eq(retailOutlets.isDeleted, true)).orderBy(desc(retailOutlets.deletedAt)),
+      db.select().from(warehouses).where(eq(warehouses.isDeleted, true)).orderBy(desc(warehouses.deletedAt)),
+      db.select().from(contactMessages).where(eq(contactMessages.isDeleted, true)).orderBy(desc(contactMessages.deletedAt)),
+    ]);
+    res.json({ products: delProducts, categories: delCategories, banners: delBanners, retailOutlets: delOutlets, warehouses: delWarehouses, contactMessages: delMessages });
+  });
+
+  app.post("/api/admin/restore/:type/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const type = param(req.params.type);
+    const id = parseInt(param(req.params.id));
+    switch (type) {
+      case "product": await storage.restoreProduct(id); break;
+      case "category": await storage.restoreCategory(id); break;
+      case "banner": await storage.restoreBanner(id); break;
+      case "retail-outlet": await storage.restoreRetailOutlet(id); break;
+      case "warehouse": await storage.restoreWarehouse(id); break;
+      case "contact-message": await storage.restoreContactMessage(id); break;
+      default: return res.status(400).json({ message: "Invalid type" });
+    }
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: `${type.toUpperCase().replace("-", "_")}_RESTORED`,
+      metaJson: { id, type },
+    });
+    res.json({ message: "Restored successfully" });
+  });
+
+  // ===== SOFT DELETE PRODUCTS & CATEGORIES =====
+  app.delete("/api/admin/products/:id", requireAuth, async (req: Request, res: Response) => {
+    const admin = req.session.admin!;
+    const id = parseInt(param(req.params.id));
+    const product = await storage.getProductById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (admin.role !== "SUPER_ADMIN" && product.createdBy !== admin.adminId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    await storage.softDeleteProduct(id);
+    await storage.createAuditLog({
+      actorAdminId: admin.adminId,
+      action: "PRODUCT_DELETED",
+      metaJson: { productId: id, name: product.name },
+    });
+    res.json({ message: "Deleted" });
+  });
+
+  app.delete("/api/admin/categories/:id", requireAuth, async (req: Request, res: Response) => {
+    const admin = req.session.admin!;
+    const id = parseInt(param(req.params.id));
+    const category = await storage.getCategoryById(id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (admin.role !== "SUPER_ADMIN" && category.createdBy !== admin.adminId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    await storage.softDeleteCategory(id);
+    await storage.createAuditLog({
+      actorAdminId: admin.adminId,
+      action: "CATEGORY_DELETED",
+      metaJson: { categoryId: id, name: category.name },
+    });
+    res.json({ message: "Deleted" });
   });
 
   return httpServer;

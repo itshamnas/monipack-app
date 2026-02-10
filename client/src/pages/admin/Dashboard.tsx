@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Layers, Users, TrendingUp, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import { Package, Layers, Users, TrendingUp, ShieldCheck, UserCheck, UserX, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
@@ -11,7 +11,7 @@ import { apiJson } from "@/lib/api";
 
 interface AdminStat {
   admin: { id: string; email: string; role: string; active: boolean };
-  stats: { totalProducts: number; activeProducts: number; disabledProducts: number; categoriesManaged: number };
+  stats: { totalProducts: number; activeProducts: number; disabledProducts: number; deletedProducts: number; categoriesManaged: number; deletedCategories: number };
 }
 
 export default function AdminDashboard() {
@@ -99,6 +99,23 @@ export default function AdminDashboard() {
             </Card>
           )}
 
+          {isSuperAdmin && (
+            <Link href="/admin/deleted-items">
+              <Card className="cursor-pointer hover:border-destructive/50 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Deleted Items</CardTitle>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">
+                    {(globalStats?.deletedProducts ?? 0) + (globalStats?.deletedCategories ?? 0) + (globalStats?.deletedBanners ?? 0) + (globalStats?.deletedRetailOutlets ?? 0) + (globalStats?.deletedWarehouses ?? 0) + (globalStats?.deletedContactMessages ?? 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Click to view & restore</p>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
+
           {!isSuperAdmin && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -133,6 +150,7 @@ export default function AdminDashboard() {
                     <th className="text-center py-3 px-2 font-medium">Total</th>
                     <th className="text-center py-3 px-2 font-medium">Active</th>
                     <th className="text-center py-3 px-2 font-medium">Disabled</th>
+                    <th className="text-center py-3 px-2 font-medium">Deleted</th>
                     <th className="text-center py-3 px-2 font-medium">Categories</th>
                     <th className="text-left py-3 px-2 font-medium hidden md:table-cell">Upload Share</th>
                   </tr>
@@ -167,6 +185,9 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-3 px-2 text-center">
                         <span className="text-red-600 font-medium">{item.stats.disabledProducts}</span>
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <span className="text-muted-foreground font-medium">{item.stats.deletedProducts}</span>
                       </td>
                       <td className="py-3 px-2 text-center">
                         <span className="font-medium">{item.stats.categoriesManaged}</span>

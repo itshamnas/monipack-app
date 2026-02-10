@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Package, Layers, Image, Users, LogOut, Menu, Shield, Store, Warehouse, MessageSquare, Palette
+  LayoutDashboard, Package, Layers, Image, Users, LogOut, Menu, Shield, Store, Warehouse, MessageSquare, Palette, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -46,6 +46,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin/brand-logos", label: "Brand Logos", icon: Palette, show: isSuperAdmin },
     { href: "/admin/admin-users", label: "Admin Users", icon: Users, show: isSuperAdmin },
     { href: "/admin/messages", label: "Messages", icon: MessageSquare, show: isSuperAdmin },
+    { href: "/admin/deleted-items", label: "Deleted Items", icon: Trash2, show: isSuperAdmin },
   ];
 
   const NavItems = () => (

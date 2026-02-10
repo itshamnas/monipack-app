@@ -4,6 +4,8 @@
 A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
+- 2026-02-10: Soft-delete system - all deletions preserve data (isDeleted/deletedAt), super admin can view/restore deleted items, dashboard shows deleted counts per admin
+- 2026-02-10: Super admin dashboard - per-admin product upload stats table with progress bars
 - 2026-02-10: Brand Logos management - DB table, SUPER_ADMIN upload/edit, dynamic homepage logos, click-to-zoom lightbox
 - 2026-02-09: WhatsApp inquiry enhanced - product deep links, category, improved message format
 - 2026-02-09: Share button added to ProductCard and ProductDetail (clipboard + native share)

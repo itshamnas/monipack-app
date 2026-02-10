@@ -41,18 +41,21 @@ export interface IStorage {
   createBanner(banner: InsertBanner): Promise<Banner>;
   updateBanner(id: number, data: Partial<InsertBanner>): Promise<Banner | undefined>;
   deleteBanner(id: number): Promise<void>;
+  softDeleteBanner(id: number): Promise<void>;
 
   getAllRetailOutlets(includeInactive?: boolean): Promise<RetailOutlet[]>;
   getRetailOutletById(id: number): Promise<RetailOutlet | undefined>;
   createRetailOutlet(outlet: InsertRetailOutlet): Promise<RetailOutlet>;
   updateRetailOutlet(id: number, data: Partial<InsertRetailOutlet>): Promise<RetailOutlet | undefined>;
   deleteRetailOutlet(id: number): Promise<void>;
+  softDeleteRetailOutlet(id: number): Promise<void>;
 
   getAllWarehouses(includeInactive?: boolean): Promise<Warehouse[]>;
   getWarehouseById(id: number): Promise<Warehouse | undefined>;
   createWarehouse(wh: InsertWarehouse): Promise<Warehouse>;
   updateWarehouse(id: number, data: Partial<InsertWarehouse>): Promise<Warehouse | undefined>;
   deleteWarehouse(id: number): Promise<void>;
+  softDeleteWarehouse(id: number): Promise<void>;
 
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
@@ -65,10 +68,19 @@ export interface IStorage {
   getAllContactMessages(): Promise<ContactMessage[]>;
   markContactMessageRead(id: number): Promise<void>;
   deleteContactMessage(id: number): Promise<void>;
+  softDeleteContactMessage(id: number): Promise<void>;
+  softDeleteProduct(id: number): Promise<void>;
+  softDeleteCategory(id: number): Promise<void>;
+  restoreProduct(id: number): Promise<void>;
+  restoreCategory(id: number): Promise<void>;
+  restoreBanner(id: number): Promise<void>;
+  restoreRetailOutlet(id: number): Promise<void>;
+  restoreWarehouse(id: number): Promise<void>;
+  restoreContactMessage(id: number): Promise<void>;
   getUnreadContactCount(): Promise<number>;
 
-  getAdminStats(adminId: string): Promise<{ totalProducts: number; activeProducts: number; disabledProducts: number; categoriesManaged: number }>;
-  getGlobalStats(): Promise<{ totalProducts: number; activeProducts: number; totalCategories: number; activeCategories: number; totalAdmins: number }>;
+  getAdminStats(adminId: string): Promise<{ totalProducts: number; activeProducts: number; disabledProducts: number; deletedProducts: number; categoriesManaged: number; deletedCategories: number }>;
+  getGlobalStats(): Promise<{ totalProducts: number; activeProducts: number; deletedProducts: number; totalCategories: number; activeCategories: number; deletedCategories: number; totalBanners: number; deletedBanners: number; totalRetailOutlets: number; deletedRetailOutlets: number; totalWarehouses: number; deletedWarehouses: number; totalContactMessages: number; deletedContactMessages: number; totalAdmins: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -102,9 +114,9 @@ export class DatabaseStorage implements IStorage {
 
   async getAllCategories(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(categories).orderBy(asc(categories.sortOrder));
+      return db.select().from(categories).where(eq(categories.isDeleted, false)).orderBy(asc(categories.sortOrder));
     }
-    return db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder));
+    return db.select().from(categories).where(and(eq(categories.isActive, true), eq(categories.isDeleted, false))).orderBy(asc(categories.sortOrder));
   }
 
   async getCategoryById(id: number) {
@@ -129,9 +141,9 @@ export class DatabaseStorage implements IStorage {
 
   async getAllProducts(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(products).orderBy(desc(products.createdAt));
+      return db.select().from(products).where(eq(products.isDeleted, false)).orderBy(desc(products.createdAt));
     }
-    return db.select().from(products).where(eq(products.isActive, true)).orderBy(desc(products.createdAt));
+    return db.select().from(products).where(and(eq(products.isActive, true), eq(products.isDeleted, false))).orderBy(desc(products.createdAt));
   }
 
   async getProductById(id: number) {
@@ -145,7 +157,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductsByCategory(categoryId: number) {
-    return db.select().from(products).where(and(eq(products.categoryId, categoryId), eq(products.isActive, true))).orderBy(desc(products.createdAt));
+    return db.select().from(products).where(and(eq(products.categoryId, categoryId), eq(products.isActive, true), eq(products.isDeleted, false))).orderBy(desc(products.createdAt));
   }
 
   async searchProducts(query: string, categoryId?: number) {
@@ -155,6 +167,7 @@ export class DatabaseStorage implements IStorage {
 
     const conditions = [
       eq(products.isActive, true),
+      eq(products.isDeleted, false),
       or(
         ilike(products.name, searchTerm),
         ilike(products.partNumber, searchTerm),
@@ -180,14 +193,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductsByAdmin(adminId: string) {
-    return db.select().from(products).where(eq(products.createdBy, adminId)).orderBy(desc(products.createdAt));
+    return db.select().from(products).where(and(eq(products.createdBy, adminId), eq(products.isDeleted, false))).orderBy(desc(products.createdAt));
   }
 
   async getAllBanners(includeInactive = false) {
     if (includeInactive) {
-      return db.select().from(banners).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
+      return db.select().from(banners).where(eq(banners.isDeleted, false)).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
     }
-    return db.select().from(banners).where(eq(banners.isActive, true)).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
+    return db.select().from(banners).where(and(eq(banners.isActive, true), eq(banners.isDeleted, false))).orderBy(asc(banners.sortOrder), desc(banners.createdAt));
   }
 
   async getBannerById(id: number) {
@@ -206,12 +219,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBanner(id: number) {
-    await db.delete(banners).where(eq(banners.id, id));
+    await this.softDeleteBanner(id);
+  }
+
+  async softDeleteBanner(id: number) {
+    await db.update(banners).set({ isDeleted: true, deletedAt: new Date(), isActive: false }).where(eq(banners.id, id));
   }
 
   async getAllRetailOutlets(includeInactive = false) {
-    if (includeInactive) return db.select().from(retailOutlets).orderBy(desc(retailOutlets.createdAt));
-    return db.select().from(retailOutlets).where(eq(retailOutlets.isActive, true)).orderBy(desc(retailOutlets.createdAt));
+    if (includeInactive) return db.select().from(retailOutlets).where(eq(retailOutlets.isDeleted, false)).orderBy(desc(retailOutlets.createdAt));
+    return db.select().from(retailOutlets).where(and(eq(retailOutlets.isActive, true), eq(retailOutlets.isDeleted, false))).orderBy(desc(retailOutlets.createdAt));
   }
 
   async getRetailOutletById(id: number) {
@@ -230,12 +247,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteRetailOutlet(id: number) {
-    await db.delete(retailOutlets).where(eq(retailOutlets.id, id));
+    await this.softDeleteRetailOutlet(id);
+  }
+
+  async softDeleteRetailOutlet(id: number) {
+    await db.update(retailOutlets).set({ isDeleted: true, deletedAt: new Date(), isActive: false }).where(eq(retailOutlets.id, id));
   }
 
   async getAllWarehouses(includeInactive = false) {
-    if (includeInactive) return db.select().from(warehouses).orderBy(desc(warehouses.createdAt));
-    return db.select().from(warehouses).where(eq(warehouses.isActive, true)).orderBy(desc(warehouses.createdAt));
+    if (includeInactive) return db.select().from(warehouses).where(eq(warehouses.isDeleted, false)).orderBy(desc(warehouses.createdAt));
+    return db.select().from(warehouses).where(and(eq(warehouses.isActive, true), eq(warehouses.isDeleted, false))).orderBy(desc(warehouses.createdAt));
   }
 
   async getWarehouseById(id: number) {
@@ -254,7 +275,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteWarehouse(id: number) {
-    await db.delete(warehouses).where(eq(warehouses.id, id));
+    await this.softDeleteWarehouse(id);
+  }
+
+  async softDeleteWarehouse(id: number) {
+    await db.update(warehouses).set({ isDeleted: true, deletedAt: new Date(), isActive: false }).where(eq(warehouses.id, id));
   }
 
   async createAuditLog(log: InsertAuditLog) {
@@ -268,23 +293,40 @@ export class DatabaseStorage implements IStorage {
   async getAdminStats(adminId: string) {
     const adminProducts = await db.select().from(products).where(eq(products.createdBy, adminId));
     const adminCategories = await db.select().from(categories).where(eq(categories.createdBy, adminId));
+    const nonDeleted = adminProducts.filter(p => !p.isDeleted);
     return {
-      totalProducts: adminProducts.length,
-      activeProducts: adminProducts.filter(p => p.isActive).length,
-      disabledProducts: adminProducts.filter(p => !p.isActive).length,
-      categoriesManaged: adminCategories.length,
+      totalProducts: nonDeleted.length,
+      activeProducts: nonDeleted.filter(p => p.isActive).length,
+      disabledProducts: nonDeleted.filter(p => !p.isActive).length,
+      deletedProducts: adminProducts.filter(p => p.isDeleted).length,
+      categoriesManaged: adminCategories.filter(c => !c.isDeleted).length,
+      deletedCategories: adminCategories.filter(c => c.isDeleted).length,
     };
   }
 
   async getGlobalStats() {
     const allProducts = await db.select().from(products);
     const allCategories = await db.select().from(categories);
+    const allBanners = await db.select().from(banners);
+    const allOutlets = await db.select().from(retailOutlets);
+    const allWarehouses = await db.select().from(warehouses);
+    const allMessages = await db.select().from(contactMessages);
     const allAdmins = await db.select().from(admins);
     return {
-      totalProducts: allProducts.length,
-      activeProducts: allProducts.filter(p => p.isActive).length,
-      totalCategories: allCategories.length,
-      activeCategories: allCategories.filter(c => c.isActive).length,
+      totalProducts: allProducts.filter(p => !p.isDeleted).length,
+      activeProducts: allProducts.filter(p => p.isActive && !p.isDeleted).length,
+      deletedProducts: allProducts.filter(p => p.isDeleted).length,
+      totalCategories: allCategories.filter(c => !c.isDeleted).length,
+      activeCategories: allCategories.filter(c => c.isActive && !c.isDeleted).length,
+      deletedCategories: allCategories.filter(c => c.isDeleted).length,
+      totalBanners: allBanners.filter(b => !b.isDeleted).length,
+      deletedBanners: allBanners.filter(b => b.isDeleted).length,
+      totalRetailOutlets: allOutlets.filter(o => !o.isDeleted).length,
+      deletedRetailOutlets: allOutlets.filter(o => o.isDeleted).length,
+      totalWarehouses: allWarehouses.filter(w => !w.isDeleted).length,
+      deletedWarehouses: allWarehouses.filter(w => w.isDeleted).length,
+      totalContactMessages: allMessages.filter(m => !m.isDeleted).length,
+      deletedContactMessages: allMessages.filter(m => m.isDeleted).length,
       totalAdmins: allAdmins.length,
     };
   }
@@ -314,7 +356,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllContactMessages() {
-    return db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+    return db.select().from(contactMessages).where(eq(contactMessages.isDeleted, false)).orderBy(desc(contactMessages.createdAt));
   }
 
   async markContactMessageRead(id: number) {
@@ -322,11 +364,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteContactMessage(id: number) {
-    await db.delete(contactMessages).where(eq(contactMessages.id, id));
+    await this.softDeleteContactMessage(id);
+  }
+
+  async softDeleteContactMessage(id: number) {
+    await db.update(contactMessages).set({ isDeleted: true, deletedAt: new Date() }).where(eq(contactMessages.id, id));
+  }
+
+  async softDeleteProduct(id: number) {
+    await db.update(products).set({ isDeleted: true, deletedAt: new Date(), isActive: false, updatedAt: new Date() }).where(eq(products.id, id));
+  }
+
+  async softDeleteCategory(id: number) {
+    await db.update(categories).set({ isDeleted: true, deletedAt: new Date(), isActive: false, updatedAt: new Date() }).where(eq(categories.id, id));
+  }
+
+  async restoreProduct(id: number) {
+    await db.update(products).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(products.id, id));
+  }
+
+  async restoreCategory(id: number) {
+    await db.update(categories).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(categories.id, id));
+  }
+
+  async restoreBanner(id: number) {
+    await db.update(banners).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(banners.id, id));
+  }
+
+  async restoreRetailOutlet(id: number) {
+    await db.update(retailOutlets).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(retailOutlets.id, id));
+  }
+
+  async restoreWarehouse(id: number) {
+    await db.update(warehouses).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(warehouses.id, id));
+  }
+
+  async restoreContactMessage(id: number) {
+    await db.update(contactMessages).set({ isDeleted: false, deletedAt: null }).where(eq(contactMessages.id, id));
   }
 
   async getUnreadContactCount() {
-    const unread = await db.select().from(contactMessages).where(eq(contactMessages.isRead, false));
+    const unread = await db.select().from(contactMessages).where(and(eq(contactMessages.isRead, false), eq(contactMessages.isDeleted, false)));
     return unread.length;
   }
 }

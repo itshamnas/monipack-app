@@ -20,7 +20,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedCart = localStorage.getItem("monipack-cart");
     if (savedCart) {
-      try { setCart(JSON.parse(savedCart)); } catch (e) { /* ignore */ }
+      try {
+        const parsed = JSON.parse(savedCart);
+        const valid = Array.isArray(parsed) ? parsed.filter((item: any) => item?.product?.id) : [];
+        setCart(valid);
+      } catch (e) { /* ignore */ }
     }
   }, []);
 

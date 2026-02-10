@@ -90,7 +90,7 @@ export function Footer() {
         
         <div className="border-t mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Monipack. All rights reserved.</p>
-          <p>Powered by <a href="https://imshamnas.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">imshamnas.com</a></p>
+          <p>Powered by <a href="mailto:connect@imshamnas.com" className="hover:text-primary transition-colors font-medium">connect@imshamnas.com</a></p>
         </div>
       </div>
     </footer>

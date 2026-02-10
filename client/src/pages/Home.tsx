@@ -24,14 +24,14 @@ export default function Home() {
     <div className="flex flex-col">
       <Hero banners={banners} />
 
-      <section className="container mx-auto px-4 py-20" data-testid="section-hero-intro">
+      <section className="container mx-auto px-4 py-20 md:py-24" data-testid="section-hero-intro">
         <div className="max-w-4xl mx-auto text-center">
-          <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-4">Welcome to Monipack</span>
-          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+          <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-5">Welcome to Monipack</span>
+          <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold mb-7 leading-[1.1] tracking-tight">
             Empowering Oman With Quality Products{" "}
             <span className="text-primary">Since 2009</span>
           </h1>
-          <p className="text-muted-foreground text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="text-muted-foreground text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-10">
             Morooj Nizwa International LLC is an Omani company dedicated to delivering reliable cleaning, food, and packaging solutions. We focus on quality, service excellence, and consistent supply across the market.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -72,12 +72,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-20" data-testid="section-about">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+      <section className="container mx-auto px-4 py-20 md:py-24" data-testid="section-about">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
           <div>
-            <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">About Us</span>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold mb-6">A Trusted Name in Oman's Supply Chain</h2>
-            <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-4">About Us</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold mb-6 leading-tight tracking-tight">A Trusted Name in Oman's Supply Chain</h2>
+            <div className="space-y-5 text-muted-foreground text-base md:text-lg leading-relaxed">
               <p>
                 Morooj Nizwa International LLC, established in 2009, provides a wide range of essential products for households, businesses, retail stores, and industries across Oman.
               </p>
@@ -85,32 +85,32 @@ export default function Home() {
                 Our commitment is centered on reliability, consistent availability, and strong logistics support through our warehouses and retail outlets strategically located across the country.
               </p>
               <p>
-                We proudly operate three specialized brands — MoniClean, MoniFood, and MoniPack — each designed to meet the specific needs of our diverse customer base.
+                We proudly operate three specialized brands — <strong className="text-foreground">MoniClean</strong>, <strong className="text-foreground">MoniFood</strong>, and <strong className="text-foreground">MoniPack</strong> — each designed to meet the specific needs of our diverse customer base.
               </p>
             </div>
             <div className="flex gap-4 mt-8">
               <Link href="/retail-outlets">
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" className="gap-1.5 font-semibold">
                   Our Outlets <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/warehouses">
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" className="gap-1.5 font-semibold">
                   Warehouses <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-8">
-              <img src="/images/moniclean-logo.png" alt="MoniClean" className="h-24 object-contain" />
+          <div className="grid grid-cols-1 gap-5">
+            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-10 min-h-[180px]">
+              <img src="/images/moniclean-logo.png" alt="MoniClean" className="h-32 md:h-36 object-contain" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-6">
-                <img src="/images/monifood-logo.png" alt="MoniFood" className="h-20 object-contain" />
+            <div className="grid grid-cols-2 gap-5">
+              <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-8 min-h-[160px]">
+                <img src="/images/monifood-logo.png" alt="MoniFood" className="h-28 md:h-32 object-contain" />
               </div>
-              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-6">
-                <img src="/images/monipack-logo.png" alt="MoniPack" className="h-20 object-contain" />
+              <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-8 min-h-[160px]">
+                <img src="/images/monipack-logo.png" alt="MoniPack" className="h-28 md:h-32 object-contain" />
               </div>
             </div>
           </div>
@@ -120,9 +120,9 @@ export default function Home() {
       <section className="bg-muted/30 py-20" data-testid="section-categories">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Products</span>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold mb-3">Shop by Category</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-4">Our Products</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">Shop by Category</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Browse our complete range of cleaning, food, and packaging products.
             </p>
           </div>
@@ -185,9 +185,9 @@ export default function Home() {
       <section className="py-20" data-testid="section-brands">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Portfolio</span>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold mb-3">Our Brands</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-4">Our Portfolio</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">Our Brands</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Three specialized brands, each designed for everyday excellence.
             </p>
           </div>
@@ -231,9 +231,9 @@ export default function Home() {
       <section className="bg-muted/30 py-20" data-testid="section-why-choose">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Strengths</span>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold mb-3">Why Choose Monipack?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-4">Our Strengths</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">Why Choose Monipack?</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               We deliver more than products — we deliver trust and reliability.
             </p>
           </div>
@@ -284,8 +284,8 @@ export default function Home() {
       <section className="py-20" data-testid="section-vision-mission">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Purpose</span>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold">Vision & Mission</h2>
+            <span className="inline-block text-primary text-sm font-bold uppercase tracking-[0.2em] mb-4">Our Purpose</span>
+            <h2 className="font-heading text-3xl md:text-4xl font-extrabold tracking-tight">Vision & Mission</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <Card className="border shadow-sm overflow-hidden group hover:shadow-lg transition-all duration-300">

@@ -15,7 +15,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-28 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -36,7 +36,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center">
-            <img src="/images/monipack-logo.png" alt="monipack" className="h-20 w-auto object-contain" />
+            <img src="/images/monipack-logo.png" alt="monipack" className="h-28 w-auto object-contain" />
           </Link>
         </div>
 

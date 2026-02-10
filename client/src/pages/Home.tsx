@@ -100,7 +100,7 @@ export default function Home() {
                 Our commitment is centered on reliability, consistent availability, and strong logistics support through our warehouses and retail outlets strategically located across the country.
               </p>
               <p>
-                We proudly operate three specialized brands — <strong className="text-foreground">MoniClean</strong>, <strong className="text-foreground">MoniFood</strong>, and <strong className="text-foreground">MoniPack</strong> — each designed to meet the specific needs of our diverse customer base.
+                We proudly operate three specialized brands, each designed to meet the specific needs of our diverse customer base.
               </p>
             </div>
             <div className="flex gap-4 mt-8">

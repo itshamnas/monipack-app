@@ -15,7 +15,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-28 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-20 md:h-24 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -23,7 +23,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
               <div className="mt-4 mb-8">
-                <img src="/images/monipack-logo.png" alt="monipack" className="h-14 object-contain" />
+                <img src="/images/monipack-logo.svg" alt="monipack" className="h-10 w-auto" />
               </div>
               <nav className="flex flex-col gap-4">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Home</Link>
@@ -36,7 +36,13 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center">
-            <img src="/images/monipack-logo.png" alt="monipack" className="h-28 w-auto object-contain" />
+            <img
+              src="/images/monipack-logo.svg"
+              alt="monipack"
+              className="h-10 sm:h-12 md:h-14 w-auto select-none"
+              style={{ imageRendering: "auto" }}
+              data-testid="header-logo"
+            />
           </Link>
         </div>
 

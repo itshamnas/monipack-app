@@ -7,7 +7,7 @@ import type { Banner } from "@/lib/types";
 function StaticHero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="absolute inset-0 bg-[url('/images/monipack-logo.png')] bg-center bg-no-repeat bg-contain opacity-[0.03]" />
+      <div className="absolute inset-0 bg-[url('/images/monipack-logo.svg')] bg-center bg-no-repeat bg-contain opacity-[0.03]" />
       <div className="container mx-auto px-4 py-24 md:py-36 flex flex-col items-center text-center relative z-10">
         <div className="inline-flex items-center rounded-full border border-white/20 px-4 py-1.5 text-xs font-semibold text-white/90 mb-8 backdrop-blur-sm bg-white/5">
           Cleaning · Food · Packaging Solutions

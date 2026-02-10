@@ -24,6 +24,7 @@ import AdminWarehouses from "./pages/admin/AdminWarehouses";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminMessages from "./pages/admin/AdminMessages";
 import AdminBrandLogos from "./pages/admin/AdminBrandLogos";
+import AdminCareerPosts from "./pages/admin/AdminCareerPosts";
 import DeletedItems from "./pages/admin/DeletedItems";
 
 function Router() {
@@ -53,6 +54,9 @@ function Router() {
       </Route>
       <Route path="/admin/brand-logos">
         <AdminLayout><AdminBrandLogos /></AdminLayout>
+      </Route>
+      <Route path="/admin/career-posts">
+        <AdminLayout><AdminCareerPosts /></AdminLayout>
       </Route>
       <Route path="/admin/deleted-items">
         <AdminLayout><DeletedItems /></AdminLayout>

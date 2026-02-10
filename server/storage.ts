@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { eq, desc, asc, ilike, and, or, sql } from "drizzle-orm";
 import {
-  admins, categories, products, banners, auditLogs, retailOutlets, warehouses, contactMessages, brandLogos,
+  admins, categories, products, banners, auditLogs, retailOutlets, warehouses, contactMessages, brandLogos, careerPosts,
   type Admin, type InsertAdmin,
   type Category, type InsertCategory,
   type Product, type InsertProduct,
@@ -10,6 +10,7 @@ import {
   type RetailOutlet, type InsertRetailOutlet,
   type Warehouse, type InsertWarehouse,
   type BrandLogo, type InsertBrandLogo,
+  type CareerPost, type InsertCareerPost,
   type ContactMessage, type InsertContactMessage,
 } from "@shared/schema";
 
@@ -76,6 +77,13 @@ export interface IStorage {
   restoreBanner(id: number): Promise<void>;
   restoreRetailOutlet(id: number): Promise<void>;
   restoreWarehouse(id: number): Promise<void>;
+  getAllCareerPosts(includeInactive?: boolean): Promise<CareerPost[]>;
+  getCareerPostById(id: number): Promise<CareerPost | undefined>;
+  createCareerPost(post: InsertCareerPost): Promise<CareerPost>;
+  updateCareerPost(id: number, data: Partial<InsertCareerPost>): Promise<CareerPost | undefined>;
+  softDeleteCareerPost(id: number): Promise<void>;
+  restoreCareerPost(id: number): Promise<void>;
+
   restoreContactMessage(id: number): Promise<void>;
   getUnreadContactCount(): Promise<number>;
 
@@ -401,6 +409,34 @@ export class DatabaseStorage implements IStorage {
 
   async restoreContactMessage(id: number) {
     await db.update(contactMessages).set({ isDeleted: false, deletedAt: null }).where(eq(contactMessages.id, id));
+  }
+
+  async getAllCareerPosts(includeInactive = false) {
+    if (includeInactive) return db.select().from(careerPosts).where(eq(careerPosts.isDeleted, false)).orderBy(desc(careerPosts.createdAt));
+    return db.select().from(careerPosts).where(and(eq(careerPosts.isActive, true), eq(careerPosts.isDeleted, false))).orderBy(desc(careerPosts.createdAt));
+  }
+
+  async getCareerPostById(id: number) {
+    const [post] = await db.select().from(careerPosts).where(eq(careerPosts.id, id));
+    return post;
+  }
+
+  async createCareerPost(post: InsertCareerPost) {
+    const [created] = await db.insert(careerPosts).values(post).returning();
+    return created;
+  }
+
+  async updateCareerPost(id: number, data: Partial<InsertCareerPost>) {
+    const [updated] = await db.update(careerPosts).set({ ...data, updatedAt: new Date() }).where(eq(careerPosts.id, id)).returning();
+    return updated;
+  }
+
+  async softDeleteCareerPost(id: number) {
+    await db.update(careerPosts).set({ isDeleted: true, deletedAt: new Date(), isActive: false }).where(eq(careerPosts.id, id));
+  }
+
+  async restoreCareerPost(id: number) {
+    await db.update(careerPosts).set({ isDeleted: false, deletedAt: null, isActive: true, updatedAt: new Date() }).where(eq(careerPosts.id, id));
   }
 
   async getUnreadContactCount() {

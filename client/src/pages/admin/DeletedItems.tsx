@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, RotateCcw, Package, Layers, Image, Store, Warehouse, MessageSquare } from "lucide-react";
+import { Trash2, RotateCcw, Package, Layers, Image, Store, Warehouse, MessageSquare, Briefcase } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiJson, apiFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ interface DeletedData {
   retailOutlets: any[];
   warehouses: any[];
   contactMessages: any[];
+  careerPosts: any[];
 }
 
 export default function DeletedItems() {
@@ -42,7 +43,7 @@ export default function DeletedItems() {
   });
 
   const totalDeleted = data
-    ? data.products.length + data.categories.length + data.banners.length + data.retailOutlets.length + data.warehouses.length + data.contactMessages.length
+    ? data.products.length + data.categories.length + data.banners.length + data.retailOutlets.length + data.warehouses.length + data.contactMessages.length + data.careerPosts.length
     : 0;
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -258,6 +259,38 @@ export default function DeletedItems() {
                         onClick={() => restoreMutation.mutate({ type: "contact-message", id: item.id })}
                         disabled={restoreMutation.isPending}
                         data-testid={`restore-message-${item.id}`}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1" /> Restore
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {data!.careerPosts.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Briefcase className="h-5 w-5" /> Deleted Career Posts
+                  <Badge variant="destructive" className="ml-2">{data!.careerPosts.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {data!.careerPosts.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between border rounded-lg p-3 bg-muted/30" data-testid={`deleted-career-${item.id}`}>
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.department} - {item.location} | Deleted: {item.deletedAt ? formatDate(item.deletedAt) : "N/A"}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => restoreMutation.mutate({ type: "career-post", id: item.id })}
+                        disabled={restoreMutation.isPending}
+                        data-testid={`restore-career-${item.id}`}
                       >
                         <RotateCcw className="h-4 w-4 mr-1" /> Restore
                       </Button>

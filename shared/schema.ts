@@ -129,7 +129,24 @@ export const brandLogos = pgTable("brand_logos", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const careerPosts = pgTable("career_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  department: text("department").notNull(),
+  location: text("location").notNull(),
+  type: text("type").notNull().default("Full-time"),
+  description: text("description"),
+  applyEmail: text("apply_email"),
+  isActive: boolean("is_active").notNull().default(true),
+  isDeleted: boolean("is_deleted").notNull().default(false),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: uuid("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertBrandLogoSchema = createInsertSchema(brandLogos).omit({ id: true, updatedAt: true });
+export const insertCareerPostSchema = createInsertSchema(careerPosts).omit({ id: true, createdAt: true, updatedAt: true });
 
 export const insertRetailOutletSchema = createInsertSchema(retailOutlets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertWarehouseSchema = createInsertSchema(warehouses).omit({ id: true, createdAt: true, updatedAt: true });
@@ -151,5 +168,7 @@ export type Warehouse = typeof warehouses.$inferSelect;
 export type InsertWarehouse = z.infer<typeof insertWarehouseSchema>;
 export type BrandLogo = typeof brandLogos.$inferSelect;
 export type InsertBrandLogo = z.infer<typeof insertBrandLogoSchema>;
+export type CareerPost = typeof careerPosts.$inferSelect;
+export type InsertCareerPost = z.infer<typeof insertCareerPostSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;

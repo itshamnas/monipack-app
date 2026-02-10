@@ -4,6 +4,7 @@
 A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
+- 2026-02-10: Career Posts management - DB table, SUPER_ADMIN CRUD, dynamic public career page, soft-delete/restore support
 - 2026-02-10: Soft-delete system - all deletions preserve data (isDeleted/deletedAt), super admin can view/restore deleted items, dashboard shows deleted counts per admin
 - 2026-02-10: Super admin dashboard - per-admin product upload stats table with progress bars
 - 2026-02-10: Brand Logos management - DB table, SUPER_ADMIN upload/edit, dynamic homepage logos, click-to-zoom lightbox
@@ -38,7 +39,7 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - **File uploads**: multer → /uploads directory
 
 ### Key Files
-- `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, brand_logos, retail_outlets, warehouses, audit_logs [uuid])
+- `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, brand_logos, retail_outlets, warehouses, career_posts, audit_logs [uuid])
 - `server/storage.ts` - Storage interface with Drizzle queries
 - `server/auth.ts` - Authentication (email+PIN with bcrypt, session management)
 - `server/routes.ts` - Public and admin CRUD API routes + admin user management

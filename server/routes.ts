@@ -10,7 +10,7 @@ import bcrypt from "bcrypt";
 import { sendContactEmail } from "./email";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
-import { products, categories, banners, retailOutlets, warehouses, contactMessages } from "@shared/schema";
+import { products, categories, banners, retailOutlets, warehouses, contactMessages, careerPosts } from "@shared/schema";
 
 function getIp(req: Request): string | null {
   const ip = req.ip;
@@ -116,6 +116,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/warehouses", async (_req: Request, res: Response) => {
     const whs = await storage.getAllWarehouses(false);
     res.json(whs);
+  });
+
+  app.get("/api/career-posts", async (_req: Request, res: Response) => {
+    const posts = await storage.getAllCareerPosts(false);
+    res.json(posts);
   });
 
   // Contact form submission (public)
@@ -537,6 +542,80 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Deleted" });
   });
 
+  // ===== ADMIN CAREER POSTS (SUPER_ADMIN only) =====
+  app.get("/api/admin/career-posts", requireSuperAdmin, async (_req: Request, res: Response) => {
+    const posts = await storage.getAllCareerPosts(true);
+    res.json(posts);
+  });
+
+  app.post("/api/admin/career-posts", requireSuperAdmin, async (req: Request, res: Response) => {
+    const schema = z.object({
+      title: z.string().min(1),
+      department: z.string().min(1),
+      location: z.string().min(1),
+      type: z.string().optional(),
+      description: z.string().optional(),
+      applyEmail: z.string().email().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const post = await storage.createCareerPost({
+      ...parsed.data,
+      type: parsed.data.type || "Full-time",
+      description: parsed.data.description || null,
+      applyEmail: parsed.data.applyEmail || null,
+      isActive: parsed.data.isActive ?? true,
+      createdBy: req.session.admin!.adminId,
+    });
+
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "CAREER_POST_CREATED",
+      metaJson: { postId: post.id, title: post.title },
+    });
+
+    res.status(201).json(post);
+  });
+
+  app.patch("/api/admin/career-posts/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    const post = await storage.getCareerPostById(id);
+    if (!post) return res.status(404).json({ message: "Career post not found" });
+
+    const schema = z.object({
+      title: z.string().optional(),
+      department: z.string().optional(),
+      location: z.string().optional(),
+      type: z.string().optional(),
+      description: z.string().nullable().optional(),
+      applyEmail: z.string().nullable().optional(),
+      isActive: z.boolean().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid input", errors: parsed.error.flatten() });
+
+    const updated = await storage.updateCareerPost(id, parsed.data);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "CAREER_POST_UPDATED",
+      metaJson: { postId: id, title: updated?.title },
+    });
+    res.json(updated);
+  });
+
+  app.delete("/api/admin/career-posts/:id", requireSuperAdmin, async (req: Request, res: Response) => {
+    const id = parseInt(param(req.params.id));
+    await storage.softDeleteCareerPost(id);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "CAREER_POST_DELETED",
+      metaJson: { postId: id },
+    });
+    res.json({ message: "Deleted" });
+  });
+
   // ===== BRAND LOGOS (Public + SUPER_ADMIN) =====
 
   const defaultBrands = [
@@ -733,15 +812,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ===== DELETED ITEMS (SUPER_ADMIN only) =====
   app.get("/api/admin/deleted", requireSuperAdmin, async (_req: Request, res: Response) => {
-    const [delProducts, delCategories, delBanners, delOutlets, delWarehouses, delMessages] = await Promise.all([
+    const [delProducts, delCategories, delBanners, delOutlets, delWarehouses, delMessages, delCareerPosts] = await Promise.all([
       db.select().from(products).where(eq(products.isDeleted, true)).orderBy(desc(products.deletedAt)),
       db.select().from(categories).where(eq(categories.isDeleted, true)).orderBy(desc(categories.deletedAt)),
       db.select().from(banners).where(eq(banners.isDeleted, true)).orderBy(desc(banners.deletedAt)),
       db.select().from(retailOutlets).where(eq(retailOutlets.isDeleted, true)).orderBy(desc(retailOutlets.deletedAt)),
       db.select().from(warehouses).where(eq(warehouses.isDeleted, true)).orderBy(desc(warehouses.deletedAt)),
       db.select().from(contactMessages).where(eq(contactMessages.isDeleted, true)).orderBy(desc(contactMessages.deletedAt)),
+      db.select().from(careerPosts).where(eq(careerPosts.isDeleted, true)).orderBy(desc(careerPosts.deletedAt)),
     ]);
-    res.json({ products: delProducts, categories: delCategories, banners: delBanners, retailOutlets: delOutlets, warehouses: delWarehouses, contactMessages: delMessages });
+    res.json({ products: delProducts, categories: delCategories, banners: delBanners, retailOutlets: delOutlets, warehouses: delWarehouses, contactMessages: delMessages, careerPosts: delCareerPosts });
   });
 
   app.post("/api/admin/restore/:type/:id", requireSuperAdmin, async (req: Request, res: Response) => {
@@ -754,6 +834,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       case "retail-outlet": await storage.restoreRetailOutlet(id); break;
       case "warehouse": await storage.restoreWarehouse(id); break;
       case "contact-message": await storage.restoreContactMessage(id); break;
+      case "career-post": await storage.restoreCareerPost(id); break;
       default: return res.status(400).json({ message: "Invalid type" });
     }
     await storage.createAuditLog({

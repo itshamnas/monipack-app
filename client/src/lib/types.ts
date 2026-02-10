@@ -99,6 +99,20 @@ export interface BrandLogo {
   updatedAt: string;
 }
 
+export interface CareerPost {
+  id: number;
+  title: string;
+  department: string;
+  location: string;
+  type: string;
+  description: string | null;
+  applyEmail: string | null;
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   authenticated: boolean;
   admin?: {

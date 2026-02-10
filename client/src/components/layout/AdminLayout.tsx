@@ -51,7 +51,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const NavItems = () => (
     <>
       <div className="px-3 py-4">
-        <a href="/" className="block mb-1"><img src="/images/monipack-logo.svg" alt="monipack" className="h-8 w-auto" /></a>
+        <a href="/" className="block mb-1"><img src="/images/monipack-logo-clean.png" alt="monipack" className="h-8 w-auto" /></a>
         <Badge variant={isSuperAdmin ? "default" : "secondary"} className="text-xs">
           <Shield className="h-3 w-3 mr-1" />{admin?.role}
         </Badge>

@@ -90,6 +90,15 @@ export interface Warehouse {
   updatedAt: string;
 }
 
+export interface BrandLogo {
+  id: number;
+  brandKey: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  updatedAt: string;
+}
+
 export interface AuthSession {
   authenticated: boolean;
   admin?: {

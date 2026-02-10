@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { eq, desc, asc, ilike, and, or, sql } from "drizzle-orm";
 import {
-  admins, categories, products, banners, auditLogs, retailOutlets, warehouses, contactMessages,
+  admins, categories, products, banners, auditLogs, retailOutlets, warehouses, contactMessages, brandLogos,
   type Admin, type InsertAdmin,
   type Category, type InsertCategory,
   type Product, type InsertProduct,
@@ -9,6 +9,7 @@ import {
   type AuditLog, type InsertAuditLog,
   type RetailOutlet, type InsertRetailOutlet,
   type Warehouse, type InsertWarehouse,
+  type BrandLogo, type InsertBrandLogo,
   type ContactMessage, type InsertContactMessage,
 } from "@shared/schema";
 
@@ -55,6 +56,10 @@ export interface IStorage {
 
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(limit?: number): Promise<AuditLog[]>;
+
+  getAllBrandLogos(): Promise<BrandLogo[]>;
+  getBrandLogoByKey(key: string): Promise<BrandLogo | undefined>;
+  upsertBrandLogo(data: InsertBrandLogo): Promise<BrandLogo>;
 
   createContactMessage(msg: InsertContactMessage): Promise<ContactMessage>;
   getAllContactMessages(): Promise<ContactMessage[]>;
@@ -282,6 +287,25 @@ export class DatabaseStorage implements IStorage {
       activeCategories: allCategories.filter(c => c.isActive).length,
       totalAdmins: allAdmins.length,
     };
+  }
+
+  async getAllBrandLogos() {
+    return db.select().from(brandLogos);
+  }
+
+  async getBrandLogoByKey(key: string) {
+    const [logo] = await db.select().from(brandLogos).where(eq(brandLogos.brandKey, key));
+    return logo;
+  }
+
+  async upsertBrandLogo(data: InsertBrandLogo) {
+    const existing = await this.getBrandLogoByKey(data.brandKey);
+    if (existing) {
+      const [updated] = await db.update(brandLogos).set({ ...data, updatedAt: new Date() }).where(eq(brandLogos.brandKey, data.brandKey)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(brandLogos).values(data).returning();
+    return created;
   }
 
   async createContactMessage(msg: InsertContactMessage) {

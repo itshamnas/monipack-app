@@ -23,6 +23,7 @@ import AdminRetailOutlets from "./pages/admin/AdminRetailOutlets";
 import AdminWarehouses from "./pages/admin/AdminWarehouses";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminMessages from "./pages/admin/AdminMessages";
+import AdminBrandLogos from "./pages/admin/AdminBrandLogos";
 
 function Router() {
   return (
@@ -48,6 +49,9 @@ function Router() {
       </Route>
       <Route path="/admin/messages">
         <AdminLayout><AdminMessages /></AdminLayout>
+      </Route>
+      <Route path="/admin/brand-logos">
+        <AdminLayout><AdminBrandLogos /></AdminLayout>
       </Route>
       <Route path="/admin">
         <AdminLayout><AdminDashboard /></AdminLayout>

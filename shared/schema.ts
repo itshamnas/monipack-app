@@ -108,6 +108,17 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const brandLogos = pgTable("brand_logos", {
+  id: serial("id").primaryKey(),
+  brandKey: text("brand_key").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  image: text("image"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBrandLogoSchema = createInsertSchema(brandLogos).omit({ id: true, updatedAt: true });
+
 export const insertRetailOutletSchema = createInsertSchema(retailOutlets).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertWarehouseSchema = createInsertSchema(warehouses).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({ id: true, createdAt: true, isRead: true });
@@ -126,5 +137,7 @@ export type RetailOutlet = typeof retailOutlets.$inferSelect;
 export type InsertRetailOutlet = z.infer<typeof insertRetailOutletSchema>;
 export type Warehouse = typeof warehouses.$inferSelect;
 export type InsertWarehouse = z.infer<typeof insertWarehouseSchema>;
+export type BrandLogo = typeof brandLogos.$inferSelect;
+export type InsertBrandLogo = z.infer<typeof insertBrandLogoSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;

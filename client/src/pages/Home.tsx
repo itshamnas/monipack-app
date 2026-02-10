@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Category, Banner } from "@/lib/types";
+import type { Category, Banner, BrandLogo } from "@/lib/types";
 import { Hero } from "@/components/ui/Hero";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Truck, ShieldCheck, Leaf, Package, Eye, Target, Phone, ChevronRight } from "lucide-react";
+import { ArrowRight, Truck, ShieldCheck, Leaf, Package, Eye, Target, Phone, ChevronRight, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiJson } from "@/lib/api";
+import { useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function Home() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
@@ -19,6 +21,18 @@ export default function Home() {
     queryFn: () => apiJson<Banner[]>("/api/banners"),
     staleTime: 0,
   });
+
+  const { data: brandLogos = [] } = useQuery<BrandLogo[]>({
+    queryKey: ["brand-logos"],
+    queryFn: () => apiJson<BrandLogo[]>("/api/brand-logos"),
+  });
+
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string } | null>(null);
+
+  const getBrandLogo = (key: string) => brandLogos.find(l => l.brandKey === key);
+  const moniclean = getBrandLogo("moniclean");
+  const monifood = getBrandLogo("monifood");
+  const monipack = getBrandLogo("monipack");
 
   return (
     <div className="flex flex-col">
@@ -102,15 +116,27 @@ export default function Home() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-5">
-            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-10 min-h-[180px]">
-              <img src="/images/moniclean-logo.png" alt="MoniClean" className="h-32 md:h-36 object-contain" />
+            <div
+              className="rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-10 min-h-[180px] cursor-pointer hover:shadow-lg transition-all duration-300 group"
+              onClick={() => setLightboxImage({ src: moniclean?.image || "/images/moniclean-logo.png", alt: moniclean?.name || "MoniClean" })}
+              data-testid="brand-logo-moniclean"
+            >
+              <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} className="h-32 md:h-36 object-contain group-hover:scale-110 transition-transform duration-300" />
             </div>
             <div className="grid grid-cols-2 gap-5">
-              <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-8 min-h-[160px]">
-                <img src="/images/monifood-logo.png" alt="MoniFood" className="h-28 md:h-32 object-contain" />
+              <div
+                className="rounded-2xl overflow-hidden bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-8 min-h-[160px] cursor-pointer hover:shadow-lg transition-all duration-300 group"
+                onClick={() => setLightboxImage({ src: monifood?.image || "/images/monifood-logo.png", alt: monifood?.name || "MoniFood" })}
+                data-testid="brand-logo-monifood"
+              >
+                <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-8 min-h-[160px]">
-                <img src="/images/monipack-logo.png" alt="MoniPack" className="h-28 md:h-32 object-contain" />
+              <div
+                className="rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-8 min-h-[160px] cursor-pointer hover:shadow-lg transition-all duration-300 group"
+                onClick={() => setLightboxImage({ src: monipack?.image || "/images/monipack-logo.png", alt: monipack?.name || "MoniPack" })}
+                data-testid="brand-logo-monipack"
+              >
+                <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
               </div>
             </div>
           </div>
@@ -192,36 +218,42 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative">
+            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative cursor-pointer"
+              onClick={() => setLightboxImage({ src: moniclean?.image || "/images/moniclean-logo.png", alt: moniclean?.name || "MoniClean" })}
+            >
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-blue-50 flex items-center justify-center p-4">
-                  <img src="/images/moniclean-logo.png" alt="MoniClean" className="w-full h-full object-contain" />
+                  <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-heading font-bold text-xl mb-3">MoniClean</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">Cleaning and hygiene essentials designed for everyday use in homes, offices, and commercial spaces.</p>
+                <h3 className="font-heading font-bold text-xl mb-3">{moniclean?.name || "MoniClean"}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{moniclean?.description || "Cleaning and hygiene essentials designed for everyday use in homes, offices, and commercial spaces."}</p>
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative">
+            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative cursor-pointer"
+              onClick={() => setLightboxImage({ src: monifood?.image || "/images/monifood-logo.png", alt: monifood?.name || "MoniFood" })}
+            >
               <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-green-50 flex items-center justify-center p-4">
-                  <img src="/images/monifood-logo.png" alt="MoniFood" className="w-full h-full object-contain" />
+                  <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-heading font-bold text-xl mb-3">MoniFood</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">Safe, high-quality food products sourced and distributed for homes, restaurants, and businesses.</p>
+                <h3 className="font-heading font-bold text-xl mb-3">{monifood?.name || "MoniFood"}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{monifood?.description || "Safe, high-quality food products sourced and distributed for homes, restaurants, and businesses."}</p>
               </CardContent>
             </Card>
 
-            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative">
+            <Card className="border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group relative cursor-pointer"
+              onClick={() => setLightboxImage({ src: monipack?.image || "/images/monipack-logo.png", alt: monipack?.name || "MoniPack" })}
+            >
               <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-red-50 flex items-center justify-center p-4">
-                  <img src="/images/monipack-logo.png" alt="MoniPack" className="w-full h-full object-contain" />
+                  <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} className="w-full h-full object-contain" />
                 </div>
-                <h3 className="font-heading font-bold text-xl mb-3">MoniPack</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">Reliable packaging solutions for retail, catering, industrial, and commercial needs.</p>
+                <h3 className="font-heading font-bold text-xl mb-3">{monipack?.name || "MoniPack"}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{monipack?.description || "Reliable packaging solutions for retail, catering, industrial, and commercial needs."}</p>
               </CardContent>
             </Card>
           </div>
@@ -342,6 +374,33 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
+        <DialogContent className="max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden bg-white border-none shadow-2xl">
+          <div className="relative flex items-center justify-center p-8 md:p-12 min-h-[300px] md:min-h-[400px]">
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute top-3 right-3 z-10 bg-black/10 hover:bg-black/20 rounded-full p-2 transition-colors"
+              data-testid="lightbox-close"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+            {lightboxImage && (
+              <img
+                src={lightboxImage.src}
+                alt={lightboxImage.alt}
+                className="max-w-full max-h-[60vh] object-contain"
+                data-testid="lightbox-image"
+              />
+            )}
+          </div>
+          {lightboxImage && (
+            <div className="text-center pb-6 px-4">
+              <p className="font-heading font-bold text-xl text-foreground">{lightboxImage.alt}</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -534,6 +534,45 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ message: "Deleted" });
   });
 
+  // ===== BRAND LOGOS (Public + SUPER_ADMIN) =====
+
+  const defaultBrands = [
+    { brandKey: "moniclean", name: "MoniClean", description: "Cleaning and hygiene essentials designed for everyday use in homes, offices, and commercial spaces.", image: "/images/moniclean-logo.png" },
+    { brandKey: "monifood", name: "MoniFood", description: "Safe, high-quality food products sourced and distributed for homes, restaurants, and businesses.", image: "/images/monifood-logo.png" },
+    { brandKey: "monipack", name: "MoniPack", description: "Reliable packaging solutions for retail, catering, industrial, and commercial needs.", image: "/images/monipack-logo.png" },
+  ];
+  for (const brand of defaultBrands) {
+    const existing = await storage.getBrandLogoByKey(brand.brandKey);
+    if (!existing) {
+      await storage.upsertBrandLogo(brand);
+    }
+  }
+
+  app.get("/api/brand-logos", async (_req: Request, res: Response) => {
+    const logos = await storage.getAllBrandLogos();
+    res.json(logos);
+  });
+
+  app.patch("/api/admin/brand-logos/:brandKey", requireSuperAdmin, async (req: Request, res: Response) => {
+    const brandKey = param(req.params.brandKey);
+    if (!["moniclean", "monifood", "monipack"].includes(brandKey)) {
+      return res.status(400).json({ message: "Invalid brand key" });
+    }
+
+    const updateData: any = { brandKey };
+    if (req.body.name) updateData.name = req.body.name;
+    if (req.body.description !== undefined) updateData.description = req.body.description;
+    if (req.body.image) updateData.image = req.body.image;
+
+    const logo = await storage.upsertBrandLogo(updateData);
+    await storage.createAuditLog({
+      actorAdminId: req.session.admin!.adminId,
+      action: "BRAND_LOGO_UPDATED",
+      metaJson: { brandKey },
+    });
+    res.json(logo);
+  });
+
   // ===== ADMIN USER MANAGEMENT (SUPER_ADMIN only) =====
 
   app.get("/api/admin/users", requireSuperAdmin, async (_req: Request, res: Response) => {

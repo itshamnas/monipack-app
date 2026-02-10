@@ -101,21 +101,16 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div className="rounded-2xl overflow-hidden aspect-[3/4] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-6">
-                <img src="/images/moniclean-logo.png" alt="MoniClean" className="w-full object-contain" />
-              </div>
-              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-6">
-                <img src="/images/monifood-logo.png" alt="MoniFood" className="w-full object-contain" />
-              </div>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-2xl overflow-hidden aspect-[16/9] bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-8">
+              <img src="/images/moniclean-logo.png" alt="MoniClean" className="h-24 object-contain" />
             </div>
-            <div className="mt-8 space-y-4">
-              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center p-6">
-                <img src="/images/monipack-logo.png" alt="MoniPack" className="w-full object-contain" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-green-500/10 to-green-500/5 flex items-center justify-center p-6">
+                <img src="/images/monifood-logo.png" alt="MoniFood" className="h-20 object-contain" />
               </div>
-              <div className="rounded-2xl overflow-hidden aspect-[3/4] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-6">
-                <img src="/images/mni-logo.png" alt="MNI" className="w-full object-contain" />
+              <div className="rounded-2xl overflow-hidden aspect-square bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-6">
+                <img src="/images/monipack-logo.png" alt="MoniPack" className="h-20 object-contain" />
               </div>
             </div>
           </div>

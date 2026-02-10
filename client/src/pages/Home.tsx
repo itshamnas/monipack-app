@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiJson } from "@/lib/api";
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export default function Home() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
@@ -377,6 +378,10 @@ export default function Home() {
 
       <Dialog open={!!lightboxImage} onOpenChange={(open) => !open && setLightboxImage(null)}>
         <DialogContent className="max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden bg-white border-none shadow-2xl [&>button]:hidden">
+          <VisuallyHidden>
+            <DialogTitle>{lightboxImage?.alt || "Brand Logo"}</DialogTitle>
+            <DialogDescription>Viewing brand logo for {lightboxImage?.alt}</DialogDescription>
+          </VisuallyHidden>
           <div className="relative flex items-center justify-center p-8 md:p-12 min-h-[300px] md:min-h-[400px]">
             <button
               onClick={() => setLightboxImage(null)}

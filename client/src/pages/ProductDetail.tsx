@@ -72,13 +72,13 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         <div className="space-y-4">
           <div className="aspect-square bg-muted rounded-xl overflow-hidden border">
-            <img src={product.images?.[activeImage] || "/images/packaging_1.jpg"} alt={product.name} className="w-full h-full object-cover" />
+            <img src={product.images?.[activeImage] || "/images/packaging_1.jpg"} alt={product.name} onError={(e) => { e.currentTarget.src = "/images/packaging_1.jpg"; }} className="w-full h-full object-cover" />
           </div>
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-4">
               {product.images.map((img, idx) => (
                 <button key={idx} onClick={() => setActiveImage(idx)} className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-border'}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" onError={(e) => { e.currentTarget.src = "/images/packaging_1.jpg"; }} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

@@ -122,7 +122,7 @@ export default function Home() {
               onClick={() => setLightboxImage({ src: moniclean?.image || "/images/moniclean-logo.png", alt: moniclean?.name || "MoniClean" })}
               data-testid="brand-logo-moniclean"
             >
-              <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} loading="lazy" decoding="async" className="h-32 md:h-36 object-contain group-hover:scale-110 transition-transform duration-300" />
+              <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/moniclean-logo.png"; }} className="h-32 md:h-36 object-contain group-hover:scale-110 transition-transform duration-300" />
             </div>
             <div className="grid grid-cols-2 gap-5">
               <div
@@ -130,14 +130,14 @@ export default function Home() {
                 onClick={() => setLightboxImage({ src: monifood?.image || "/images/monifood-logo.png", alt: monifood?.name || "MoniFood" })}
                 data-testid="brand-logo-monifood"
               >
-                <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} loading="lazy" decoding="async" className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
+                <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/monifood-logo.png"; }} className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
               </div>
               <div
                 className="rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-8 min-h-[160px] cursor-pointer hover:shadow-lg transition-all duration-300 group"
                 onClick={() => setLightboxImage({ src: monipack?.image || "/images/monipack-logo.png", alt: monipack?.name || "MoniPack" })}
                 data-testid="brand-logo-monipack"
               >
-                <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} loading="lazy" decoding="async" className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
+                <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/monipack-logo.png"; }} className="h-28 md:h-32 object-contain group-hover:scale-110 transition-transform duration-300" />
               </div>
             </div>
           </div>
@@ -175,13 +175,18 @@ export default function Home() {
                           alt={cat.name}
                           loading="lazy"
                           decoding="async"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.style.display = "none";
+                            const fallback = target.parentElement?.querySelector(".img-fallback") as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                          <span className="text-5xl text-primary/30 font-heading font-bold">{cat.name.charAt(0)}</span>
-                        </div>
-                      )}
+                      ) : null}
+                      <div className={`img-fallback w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 items-center justify-center absolute inset-0 ${cat.image ? "hidden" : "flex"}`}>
+                        <span className="text-5xl text-primary/30 font-heading font-bold">{cat.name.charAt(0)}</span>
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                     <CardContent className="p-5">
@@ -227,7 +232,7 @@ export default function Home() {
               <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-blue-50 flex items-center justify-center p-4">
-                  <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} loading="lazy" decoding="async" className="w-full h-full object-contain" />
+                  <img src={moniclean?.image || "/images/moniclean-logo.png"} alt={moniclean?.name || "MoniClean"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/moniclean-logo.png"; }} className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-3">{moniclean?.name || "MoniClean"}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{moniclean?.description || "Cleaning and hygiene essentials designed for everyday use in homes, offices, and commercial spaces."}</p>
@@ -240,7 +245,7 @@ export default function Home() {
               <div className="absolute top-0 left-0 w-full h-1 bg-green-500" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-green-50 flex items-center justify-center p-4">
-                  <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} loading="lazy" decoding="async" className="w-full h-full object-contain" />
+                  <img src={monifood?.image || "/images/monifood-logo.png"} alt={monifood?.name || "MoniFood"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/monifood-logo.png"; }} className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-3">{monifood?.name || "MoniFood"}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{monifood?.description || "Safe, high-quality food products sourced and distributed for homes, restaurants, and businesses."}</p>
@@ -253,7 +258,7 @@ export default function Home() {
               <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
               <CardContent className="p-8 text-center">
                 <div className="w-28 h-28 mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 rounded-2xl bg-red-50 flex items-center justify-center p-4">
-                  <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} loading="lazy" decoding="async" className="w-full h-full object-contain" />
+                  <img src={monipack?.image || "/images/monipack-logo.png"} alt={monipack?.name || "MoniPack"} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = "/images/monipack-logo.png"; }} className="w-full h-full object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-xl mb-3">{monipack?.name || "MoniPack"}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{monipack?.description || "Reliable packaging solutions for retail, catering, industrial, and commercial needs."}</p>

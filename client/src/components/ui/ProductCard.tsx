@@ -14,7 +14,14 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Card className="group overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300 border-none bg-card/50">
       <div className="relative aspect-square overflow-hidden bg-muted/20">
-        <img src={mainImage} alt={product.name} loading="lazy" decoding="async" className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+        <img
+          src={mainImage}
+          alt={product.name}
+          loading="lazy"
+          decoding="async"
+          onError={(e) => { e.currentTarget.src = "/images/packaging_1.jpg"; }}
+          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+        />
         {product.isActive ? (
           product.isFeatured && <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">Featured</Badge>
         ) : (

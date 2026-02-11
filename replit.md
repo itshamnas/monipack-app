@@ -4,6 +4,8 @@
 A production-ready, SEO-friendly product catalogue for "monipack" packaging company. Features email + 6-digit PIN authentication with per-user PINs, role-based admin panel (SUPER_ADMIN / ADMIN), product/category/banner CRUD management, and WhatsApp inquiry integration (no payment processing).
 
 ## Recent Changes
+- 2026-02-11: Object Storage integration - all uploads now persist in Replit Object Storage (survives deployments), /uploads route falls back to object storage when local file missing, migration endpoint for existing files
+- 2026-02-11: Image optimization - sharp compression on upload (80% quality), lazy loading on frontend, aggressive caching headers (1 year immutable)
 - 2026-02-10: Career Posts management - DB table, SUPER_ADMIN CRUD, dynamic public career page, soft-delete/restore support
 - 2026-02-10: Soft-delete system - all deletions preserve data (isDeleted/deletedAt), super admin can view/restore deleted items, dashboard shows deleted counts per admin
 - 2026-02-10: Super admin dashboard - per-admin product upload stats table with progress bars
@@ -36,7 +38,7 @@ A production-ready, SEO-friendly product catalogue for "monipack" packaging comp
 - **Frontend**: React + Vite + TypeScript, TanStack Query, wouter routing, shadcn/ui components, Tailwind CSS
 - **Backend**: Express.js (v5), bcrypt for PIN hashing, express-session with connect-pg-simple
 - **Database**: PostgreSQL with Drizzle ORM
-- **File uploads**: multer → /uploads directory
+- **File uploads**: multer → sharp compression → Replit Object Storage (persistent) + local /uploads fallback
 
 ### Key Files
 - `shared/schema.ts` - Drizzle schema (admins [uuid], products, categories, banners, brand_logos, retail_outlets, warehouses, career_posts, audit_logs [uuid])

@@ -12,6 +12,7 @@ import { sendContactEmail } from "./email";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { products, categories, banners, retailOutlets, warehouses, contactMessages, careerPosts } from "@shared/schema";
+import { objectStorageClient } from "./replit_integrations/object_storage";
 
 async function compressImage(filePath: string): Promise<void> {
   try {
@@ -44,6 +45,36 @@ function getIp(req: Request): string | null {
 const uploadDir = path.resolve("uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+function getBucketId(): string {
+  const id = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+  if (!id) throw new Error("DEFAULT_OBJECT_STORAGE_BUCKET_ID is not set");
+  return id;
+}
+
+async function uploadToObjectStorage(localFilePath: string, filename: string): Promise<string> {
+  const bucket = objectStorageClient.bucket(getBucketId());
+  const objectName = `public/uploads/${filename}`;
+  const file = bucket.file(objectName);
+  const content = fs.readFileSync(localFilePath);
+  await file.save(content, {
+    resumable: false,
+    metadata: {
+      contentType: getContentType(filename),
+    },
+  });
+  return `/uploads/${filename}`;
+}
+
+function getContentType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  const types: Record<string, string> = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+    ".png": "image/png", ".gif": "image/gif",
+    ".webp": "image/webp",
+  };
+  return types[ext] || "application/octet-stream";
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadDir),
@@ -73,14 +104,38 @@ function param(val: string | string[] | undefined): string {
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   setupAuth(app);
 
-  app.use("/uploads", (req, res, next) => {
-    const filePath = path.join(uploadDir, req.path);
+  app.use("/uploads", async (req, res, next) => {
+    const filename = req.path.replace(/^\//, "");
+    const filePath = path.join(uploadDir, filename);
     if (fs.existsSync(filePath)) {
       res.set("Cache-Control", "public, max-age=31536000, immutable");
       res.set("Vary", "Accept-Encoding");
-      res.sendFile(filePath);
-    } else {
-      res.status(404).json({ message: "File not found" });
+      return res.sendFile(filePath);
+    }
+
+    try {
+      const bucket = objectStorageClient.bucket(getBucketId());
+      const objectName = `public/uploads/${filename}`;
+      const file = bucket.file(objectName);
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      const [metadata] = await file.getMetadata();
+      res.set("Content-Type", metadata.contentType || "application/octet-stream");
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      res.set("Vary", "Accept-Encoding");
+      const stream = file.createReadStream();
+      stream.on("error", (streamErr) => {
+        console.error("[uploads] Stream error from object storage:", streamErr);
+        if (!res.headersSent) {
+          res.status(500).json({ message: "Error reading file from storage" });
+        }
+      });
+      stream.pipe(res);
+    } catch (err) {
+      console.error("[uploads] Error serving from object storage:", err);
+      return res.status(500).json({ message: "Storage service error" });
     }
   });
 
@@ -174,7 +229,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     await Promise.all(files.map(f => compressImage(f.path)));
 
-    const urls = files.map(f => `/uploads/${f.filename}`);
+    const urls: string[] = [];
+    for (const f of files) {
+      try {
+        await uploadToObjectStorage(f.path, f.filename);
+        urls.push(`/uploads/${f.filename}`);
+      } catch (err) {
+        console.error("[upload] Failed to upload to object storage:", err);
+        return res.status(500).json({ message: "Failed to save image to persistent storage" });
+      }
+    }
     res.json({ urls });
   });
 
@@ -905,6 +969,32 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       metaJson: { categoryId: id, name: category.name },
     });
     res.json({ message: "Deleted" });
+  });
+
+  app.post("/api/admin/migrate-uploads", requireSuperAdmin, async (req: Request, res: Response) => {
+    try {
+      const files = fs.readdirSync(uploadDir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+      let migrated = 0;
+      let skipped = 0;
+      let failed = 0;
+      for (const filename of files) {
+        try {
+          const bucket = objectStorageClient.bucket(getBucketId());
+          const objectName = `public/uploads/${filename}`;
+          const file = bucket.file(objectName);
+          const [exists] = await file.exists();
+          if (exists) { skipped++; continue; }
+          await uploadToObjectStorage(path.join(uploadDir, filename), filename);
+          migrated++;
+        } catch (err) {
+          console.error(`[migrate] Failed: ${filename}`, err);
+          failed++;
+        }
+      }
+      res.json({ message: "Migration complete", migrated, skipped, failed, total: files.length });
+    } catch (err) {
+      res.status(500).json({ message: "Migration failed" });
+    }
   });
 
   return httpServer;

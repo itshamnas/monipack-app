@@ -70,6 +70,9 @@ export function Hero({ banners = [] }: { banners?: Banner[] }) {
             <img
               src={b.image}
               alt={b.title}
+              loading={i === 0 ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={i === 0 ? "high" : "auto"}
               className="w-full h-full object-cover"
               data-testid={`banner-image-${b.id}`}
             />

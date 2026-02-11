@@ -7,10 +7,32 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import bcrypt from "bcrypt";
+import sharp from "sharp";
 import { sendContactEmail } from "./email";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import { products, categories, banners, retailOutlets, warehouses, contactMessages, careerPosts } from "@shared/schema";
+
+async function compressImage(filePath: string): Promise<void> {
+  try {
+    const ext = path.extname(filePath).toLowerCase();
+    const tempPath = filePath + ".tmp";
+
+    if ([".jpg", ".jpeg"].includes(ext)) {
+      await sharp(filePath).jpeg({ quality: 80, progressive: true }).toFile(tempPath);
+    } else if (ext === ".png") {
+      await sharp(filePath).png({ quality: 80, compressionLevel: 8 }).toFile(tempPath);
+    } else if (ext === ".webp") {
+      await sharp(filePath).webp({ quality: 80 }).toFile(tempPath);
+    } else {
+      return;
+    }
+
+    fs.renameSync(tempPath, filePath);
+  } catch (err) {
+    console.error("[compress] Failed to compress image:", err);
+  }
+}
 
 function getIp(req: Request): string | null {
   const ip = req.ip;
@@ -54,6 +76,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.use("/uploads", (req, res, next) => {
     const filePath = path.join(uploadDir, req.path);
     if (fs.existsSync(filePath)) {
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      res.set("Vary", "Accept-Encoding");
       res.sendFile(filePath);
     } else {
       res.status(404).json({ message: "File not found" });
@@ -144,9 +168,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ===== ADMIN API =====
 
-  app.post("/api/admin/upload", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
+  app.post("/api/admin/upload", requireAuth, upload.array("images", 10), async (req: Request, res: Response) => {
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) return res.status(400).json({ message: "No files uploaded" });
+
+    await Promise.all(files.map(f => compressImage(f.path)));
+
     const urls = files.map(f => `/uploads/${f.filename}`);
     res.json({ urls });
   });
